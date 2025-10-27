@@ -16,7 +16,7 @@ const page = () => {
         </div>
         <div className='h-full items-center gap-5 justify-center p-24 flex-col flex w-full'>
             <div className='text-center'>
-            <h2 className="text-4xl">Create an account with Ecovest</h2>
+            <h2 className="text-5xl">Create an account with Ecovest</h2>
             <p className='text-black/50'>Sign up with Ecovest to access latest investing finds </p>
             </div>
             <button className="border-2 max-w-md w-full justify-center items-center text-black font-medium border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
