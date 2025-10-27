@@ -19,7 +19,7 @@ const page = () => {
             <h2 className="text-4xl">Create an account with Ecovest</h2>
             <p className='text-black/50'>Sign up with Ecovest to access latest investing finds </p>
             </div>
-            <button className="border-2 max-w-md w-full justify-center items-center text-black font-semibold border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
+            <button className="border-2 max-w-md w-full justify-center items-center text-black font-medium border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
                 <Image src="/google.svg" alt="google" width={24} height={24} className=""/>
                 Continue with Google
             </button>

@@ -1,8 +1,12 @@
+"use client"
 import Image from 'next/image'
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
 
 const page = () => {
+
+    const [loading, setLoading] = useState(false);
+
   return (
     <div className="flex justify-center w-screen items-center h-screen">
         <div className='login h-full flex flex-col justify-between p-12 w-[75%]'>
@@ -19,7 +23,7 @@ const page = () => {
             <h2 className="text-4xl">Welcome Back</h2>
             <p className='text-black/50'>Enter your email and password to continue.</p>
             </div>
-            <button className="border-2 max-w-md w-full justify-center items-center text-black font-semibold border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
+            <button className="border-2 max-w-md w-full justify-center items-center text-black font-medium border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
                 <Image src="/google.svg" alt="google" width={24} height={24} className=""/>
                 Continue with Google
             </button>
@@ -34,7 +38,7 @@ const page = () => {
                     <p className="text-base">At least 8 characters</p>
                 </div>
             </div>
-            <button className="p-3 mt-4 max-w-md w-full rounded-full border-2 border-base hover:bg-transparent hover:text-black transition-all duration-300 bg-base text-white">Create Account</button>
+            <button onClick={() => setLoading(true)} className="p-3 mt-4 max-w-md w-full rounded-full border-2 border-base hover:bg-transparent hover:text-black justify-center items-center transition-all duration-300 bg-base text-white">{loading ? <div className="loader-light"></div> : "Create Account"}</button>
             <div className='text-black/50'>Dont have an account? <Link href="/auth/signup" className="text-base font-semibold">Sign up</Link></div>
         </div>
     </div>
