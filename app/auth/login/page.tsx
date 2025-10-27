@@ -35,7 +35,7 @@ const page = () => {
                 </div>
             </div>
             <button className="p-3 mt-4 max-w-md w-full rounded-full border-2 border-base hover:bg-transparent hover:text-black transition-all duration-300 bg-base text-white">Create Account</button>
-            <div className='text-black/50'>Dont have an account? <Link href="/auth/login" className="text-base font-semibold">Log in</Link></div>
+            <div className='text-black/50'>Dont have an account? <Link href="/auth/signup" className="text-base font-semibold">Sign up</Link></div>
         </div>
     </div>
   )
