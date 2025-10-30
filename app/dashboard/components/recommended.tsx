@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp, Disc2} from "lucide-react";
+import { TrendingDown, TrendingUp, Disc2 } from "lucide-react";
 
 const Recommended = () => {
   const recommendations = [
@@ -23,8 +23,8 @@ const Recommended = () => {
   ];
 
   return (
-    <div className="mt-6 bg-white rounded-2xl p-12">
-      <p className="text-lg font-semibold mb-4">Recommended for You</p>
+    <div className="mt-6 bg-white rounded-2xl p-8">
+      <p className="text-xl font-semibold mb-4">Recommended for You</p>
       <div className="grid grid-cols-3 gap-5">
         {recommendations.map((rec, i) => (
           <div
@@ -38,13 +38,13 @@ const Recommended = () => {
               <p className="text-[#777] text-sm mb-4">{rec.sdg}</p>
 
               {/* Expected return */}
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center font-normal gap-2 mb-3">
                 <div className="w-14 h-12 rounded-lg bg-white flex items-center justify-center">
                   <TrendingUp className="w-8 h-8 text-base" />
                 </div>
-                <p className="text-[#426b1f] font-semibold">
-                  {rec.return}{" "}
-                  <span className="text-[#8b8b8b] text-sm font-normal">
+                <p className="text-[#426b1f] font-semibold ml-2">
+                  {rec.return} <br />
+                  <span className="text-[#8b8b8b] text-sm font-semibold">
                     Expected return
                   </span>
                 </p>
@@ -56,17 +56,17 @@ const Recommended = () => {
                   <TrendingDown className="w-8 h-8 text-red-500" />
                 </div>
                 <p className="text-[#c53b3b] font-semibold">
-                  {rec.risk}{" "}
-                  <span className="text-[#8b8b8b] text-sm font-normal">
+                  {rec.risk} <br />
+                  <span className="text-[#8b8b8b] text-sm font-semibold">
                     Expected risk
                   </span>
                 </p>
               </div>
             </div>
 
-            <button className="mt-6 bg-[#426b1f] text-white py-3 rounded-lg font-bold">
-              <Disc2 className="w-8 h-8 text-red-500" />
-              Invest
+            <button className="mt-6 bg-base text-white py-3 rounded-lg flex items-center justify-center space-x-2">
+              <Disc2 className="w-7 h-7 text-white" />
+              <span className="text-lg font-bold">Invest</span>
             </button>
           </div>
         ))}

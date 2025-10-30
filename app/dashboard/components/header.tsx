@@ -7,7 +7,7 @@ const Header = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="flex justify-between items-center px-8 pt-6 relative">
+    <header className="flex justify-between items-center px-3 pt-2 mb-5 relative">
       <div>
         <p className="text-3xl font-bold text-[#1c1c1c]">Overview</p>
         <p className="text-lg">Your portfolio and impact updates are ready.</p>
@@ -17,11 +17,11 @@ const Header = () => {
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-3 bg-white py-2 px-8 rounded-full focus:outline-none"
+          className="flex items-center gap-3 bg-white py-1.5 px-2 rounded-full focus:outline-none pr-5"
         >
           <div className="rounded-full flex items-center justify-center text-white text-sm font-bold">
             <Image
-              src="/google.svg"
+              src="/dp.svg"
               alt="dp"
               width={40}
               height={40}
