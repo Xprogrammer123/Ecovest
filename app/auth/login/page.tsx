@@ -22,7 +22,7 @@ const page = () => {
             <div className="text-center">
             <h2 className="text-5xl">Welcome Back</h2>
             <p className='text-black/50'>Enter your email and password to continue.</p>
-            </div>``
+            </div>
             <button className="border-2 max-w-md w-full justify-center items-center text-black font-medium border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
                 <Image src="/google.svg" alt="google" width={24} height={24} className=""/>
                 Continue with Google
