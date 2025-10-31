@@ -10,7 +10,7 @@ const Page = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: any) => {
     e.preventDefault();
     setError("");
     setLoading(true);
