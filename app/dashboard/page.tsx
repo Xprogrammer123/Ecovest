@@ -20,21 +20,41 @@ const Dashboard = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setTimeout(() => {
-      const dummyData: DashboardData = {
-        portfolioValue: 1250000,
-        invested: 12000,
-        predictedGrowth: 8,
-        sustainabilityScore: 90,
-        investments: [
-          { id: 1, name: "Solar Energy Fund" },
-          { id: 2, name: "Wind Power Project" },
-          { id: 3, name: "Hydro Boost" },
-        ],
-      };
-      setData(dummyData);
-      setLoading(false);
-    }, 1000);
+    const fetchDashboard = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        if (!user?.id) {
+          setError("User not found. Please log in again.");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/${user.id}`,
+          {
+            method: "GET",
+            credentials: "include", // include cookies for session
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch dashboard data`);
+        }
+
+        const result: DashboardData = await response.json();
+        setData(result);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        setError("Something went wrong while loading your dashboard.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
   }, []);
 
   return (
@@ -46,7 +66,6 @@ const Dashboard = () => {
       <main className="flex-1 p-4 md:p-6 overflow-y-auto">
         <Header />
 
-        {/* Loading / Error */}
         {loading ? (
           <p className="text-center text-gray-500 mt-10">
             Loading dashboard...
@@ -58,10 +77,10 @@ const Dashboard = () => {
             {/* Top Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Portfolio Value */}
-              <div className="portfolio text-white rounded-3xl relative overflow-hidden p-10 ">
+              <div className="portfolio text-white rounded-3xl relative overflow-hidden p-10">
                 <p className="text-2xl mb-3">Portfolio Value</p>
                 <h1 className="text-4xl md:text-5xl font-bold mt-1 mb-16">
-                  ₦{data?.portfolioValue.toLocaleString()}
+                  ₦{data?.portfolioValue?.toLocaleString() ?? "0"}
                 </h1>
                 <div className="flex items-center font-normal gap-3">
                   <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
@@ -69,10 +88,10 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <p className="text-xl font-semibold">
-                      ₦{data?.invested.toLocaleString()} today
+                      ₦{data?.invested?.toLocaleString() ?? "0"} today
                     </p>
                     <p className="text-[#d4d4d4] text-sm font-medium">
-                      +{data?.predictedGrowth}% this month
+                      +{data?.predictedGrowth ?? 0}% this month
                     </p>
                   </div>
                 </div>
@@ -89,7 +108,7 @@ const Dashboard = () => {
                       </p>
                     </div>
                     <span className="bg-green-500 text-white text-lg font-semibold px-5 py-1.5 rounded-full">
-                      +{data?.predictedGrowth}%
+                      +{data?.predictedGrowth ?? 0}%
                     </span>
                   </div>
 
@@ -102,7 +121,7 @@ const Dashboard = () => {
                         </p>
                       </div>
                       <span className="font-semibold text-lg">
-                        {data?.sustainabilityScore}/100
+                        {data?.sustainabilityScore ?? 0}/100
                       </span>
                     </div>
 
@@ -110,7 +129,7 @@ const Dashboard = () => {
                       <div
                         className="bg-base h-3 rounded-full transition-all"
                         style={{
-                          width: `${data?.sustainabilityScore || 0}%`,
+                          width: `${data?.sustainabilityScore ?? 0}%`,
                         }}
                       ></div>
                     </div>
@@ -151,7 +170,8 @@ const Dashboard = () => {
                       Your portfolio has offset{" "}
                       <b className="text-base">5 tons</b> of CO₂, and supported{" "}
                       <b className="text-base">
-                        {data?.investments.length} renewable energy projects
+                        {data?.investments?.length ?? 0} renewable energy
+                        projects
                       </b>
                       .
                     </p>
@@ -160,7 +180,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Recommended */}
             <Recommended />
           </>
         )}

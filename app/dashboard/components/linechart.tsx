@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -10,24 +10,56 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { month: "Jan", value: 2 },
-  { month: "Feb", value: 3 },
-  { month: "Mar", value: 5 },
-  { month: "Apr", value: 6 },
-  { month: "May", value: 7 },
-  { month: "Jun", value: 8 },
-  { month: "Jul", value: 9 },
-  { month: "Aug", value: 12 },
-  { month: "Sep", value: 14 },
-  { month: "Oct", value: 15 },
-  { month: "Nov", value: 18 },
-  { month: "Dec", value: 20 },
-];
+interface ChartData {
+  month: string;
+  value: number;
+}
 
 const LineChartt = () => {
+  const [data, setData] = useState<ChartData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/performance`,
+          { credentials: "include" }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch performance data");
+
+        const result = await res.json();
+        setData(result); // Make sure backend returns [{ month: "Jan", value: 2 }, ...]
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
+        <p className="text-gray-500">Loading chart...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white backdrop-blur- border border-white/20 p-6 rounded-2xl shadow-sm">
+    <div className="bg-white backdrop-blur border border-white/20 p-6 rounded-2xl shadow-sm">
       <p className="text-2xl font-semibold mb-4">Monthly Performance</p>
 
       <div className="w-full h-[300px]">
@@ -46,7 +78,7 @@ const LineChartt = () => {
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#2e2e2e"
+              stroke="#e0e0e0"
             />
 
             <XAxis
@@ -61,8 +93,6 @@ const LineChartt = () => {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#2e2e2e", fontSize: 14 }}
-              domain={[0, 20]}
-              ticks={[0, 5, 10, 15, 20]}
             />
 
             <Tooltip
