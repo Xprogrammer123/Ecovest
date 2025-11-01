@@ -9,7 +9,7 @@ const Page = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -17,10 +17,8 @@ const Page = () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
-        credentials: "include", // sends cookie automatically
-        headers: {
-          "Content-Type": "application/json",
-        },
+        credentials: "include", // send cookie automatically
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -32,15 +30,20 @@ const Page = () => {
         return;
       }
 
-      // ✅ Logged in successfully
-      console.log("User:", data.user);
+      // ✅ Ensure the backend returns a user object with an ID
+      const userId = data?.user?._id || data?.user?.id;
 
-      localStorage.setItem("user", data.user.id);
+      if (!userId) {
+        setError("Invalid response from server. Please try again.");
+        setLoading(false);
+        return;
+      }
 
-      // Example redirect after login:
-      window.location.href = `/dashboard/${data.user.id}`;
+      localStorage.setItem("user", userId);
+
+      window.location.href = `/dashboard/${userId}`;
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       setError("Something went wrong. Please try again later.");
     } finally {
       setLoading(false);
@@ -84,7 +87,10 @@ const Page = () => {
           Continue with Google
         </button>
 
-        <form className="max-w-md w-full flex flex-col gap-5">
+        <form
+          className="max-w-md w-full flex flex-col gap-5"
+          onSubmit={handleLogin}
+        >
           <div className="flex flex-col gap-2">
             <label htmlFor="email">Email</label>
             <input
@@ -115,7 +121,6 @@ const Page = () => {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
           <button
-            onClick={handleLogin}
             type="submit"
             disabled={loading}
             className="p-3 mt-4 flex max-w-md w-full rounded-full border-2 border-base hover:bg-transparent hover:text-black justify-center items-center transition-all duration-300 bg-base text-white"
