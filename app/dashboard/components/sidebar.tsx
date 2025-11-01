@@ -9,35 +9,48 @@ const Sidebar = () => {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
 
-  // 🧭 Load userId from localStorage and redirect if missing
   useEffect(() => {
     const storedId = localStorage.getItem("user")?.replace(/"/g, "");
     if (storedId) {
       setUserId(storedId);
     } else {
-      router.push("/auth/login"); // Redirect if user not logged in
+      router.push("/auth/login");
     }
   }, [router]);
 
-  // 🧩 Sidebar routes
+  // 🧩 Sidebar routes now match your folder structure
   const menu = [
-    { name: "Overview", icon: <Home size={22} />, basePath: "/dashboard" },
-    { name: "Explore", icon: <Compass size={22} />, basePath: "/explore" },
+    {
+      name: "Overview",
+      icon: <Home size={22} />,
+      path: (id: string) => `/dashboard/${id}`,
+    },
+    {
+      name: "Explore",
+      icon: <Compass size={22} />,
+      path: (id: string) => `/dashboard/${id}/explore`,
+    },
     {
       name: "Portfolio",
       icon: <BarChart2 size={22} />,
-      basePath: "/portfolio",
+      path: (id: string) => `/dashboard/${id}/portfolio`,
     },
-    { name: "Simulator", icon: <Globe2 size={22} />, basePath: "/simulator" },
-    { name: "Profile", icon: <User size={22} />, basePath: "/profile" },
+    {
+      name: "Simulator",
+      icon: <Globe2 size={22} />,
+      path: (id: string) => `/dashboard/${id}/simulator`,
+    },
+    {
+      name: "Profile",
+      icon: <User size={22} />,
+      path: (id: string) => `/dashboard/${id}/profile`,
+    },
   ];
 
-  // 🧩 Add userId to all routes
-  const getFullPath = (basePath: string) =>
-    userId ? `${basePath}/${userId}` : basePath;
-
   // 🧩 Detect active route
-  const isActiveRoute = (path: string) => pathname.startsWith(path);
+  const isActiveRoute = (path: string) => pathname === path;
+
+  if (!userId) return null; // Wait for userId to load
 
   return (
     <>
@@ -49,7 +62,7 @@ const Sidebar = () => {
 
         <nav className="flex flex-col gap-4 w-full px-6">
           {menu.map((item) => {
-            const fullPath = getFullPath(item.basePath);
+            const fullPath = item.path(userId);
             const isActive = isActiveRoute(fullPath);
 
             return (
@@ -76,7 +89,7 @@ const Sidebar = () => {
         bg-base/10 backdrop-blur-lg border-t border-white/20 shadow-2xl rounded-full z-50 mb-4"
       >
         {menu.map((item) => {
-          const fullPath = getFullPath(item.basePath);
+          const fullPath = item.path(userId);
           const isActive = isActiveRoute(fullPath);
 
           return (

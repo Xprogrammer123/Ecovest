@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { TrendingDown, TrendingUp, Disc2, BarChart3 } from "lucide-react";
+import { TrendingDown, TrendingUp, Disc2 } from "lucide-react";
 
 interface Recommendation {
   id: number;
@@ -10,19 +10,10 @@ interface Recommendation {
   expectedRisk: string;
 }
 
-interface SimulationResult {
-  projection: string;
-  estimatedReturn: string;
-}
-
 const Recommended = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [simulating, setSimulating] = useState(false);
-  const [simulationResult, setSimulationResult] =
-    useState<SimulationResult | null>(null);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -37,8 +28,9 @@ const Recommended = () => {
         );
 
         if (!res.ok) {
-          if (res.status === 401)
+          if (res.status === 401) {
             throw new Error("Please log in to see AI recommendations.");
+          }
           throw new Error("Failed to fetch recommendations.");
         }
 
@@ -54,37 +46,6 @@ const Recommended = () => {
 
     fetchRecommendations();
   }, []);
-
-  const handleSimulate = async (recId: number) => {
-    setSimulating(true);
-    setShowModal(true);
-    setSimulationResult(null);
-
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recommendationIndex: recId }),
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to simulate investment.");
-
-      const data = await res.json();
-      setSimulationResult({
-        projection: data.projection || "No projection available.",
-        estimatedReturn: data.estimatedReturn || "N/A",
-      });
-    } catch (err: any) {
-      console.error("Simulation error:", err);
-      setSimulationResult({ projection: err.message, estimatedReturn: "N/A" });
-    } finally {
-      setSimulating(false);
-    }
-  };
 
   // ✨ Shimmer Loading UI
   if (loading) {
@@ -165,58 +126,12 @@ const Recommended = () => {
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => handleSimulate(rec.id)}
-                  className="flex-1 bg-[#e5f4ea] text-base py-3 rounded-lg flex items-center justify-center gap-2 font-bold text-[#426b1f]"
-                >
-                  <BarChart3 className="w-6 h-6" />
-                  Simulate
-                </button>
-
-                <button className="flex-1 bg-base text-white py-3 rounded-lg flex items-center justify-center gap-2 font-bold">
-                  <Disc2 className="w-6 h-6 text-white" />
-                  Invest
-                </button>
-              </div>
+              <button className="mt-6 bg-base text-white py-3 rounded-lg flex items-center justify-center space-x-2">
+                <Disc2 className="w-7 h-7 text-white" />
+                <span className="text-lg font-bold">Invest</span>
+              </button>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* 🔮 Simulation Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl w-11/12 max-w-md text-center shadow-lg">
-            {simulating ? (
-              <div className="animate-pulse">
-                <p className="text-lg font-semibold mb-3">
-                  Simulating investment...
-                </p>
-                <div className="h-5 bg-gray-200 rounded mb-2"></div>
-                <div className="h-5 bg-gray-200 rounded w-3/4 mx-auto"></div>
-              </div>
-            ) : (
-              <>
-                <p className="text-xl font-bold mb-3 text-[#1c1c1c]">
-                  Simulation Result
-                </p>
-                <p className="text-[#426b1f] font-medium mb-2">
-                  Estimated Return: {simulationResult?.estimatedReturn}
-                </p>
-                <p className="text-gray-600 mb-5">
-                  {simulationResult?.projection}
-                </p>
-
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="bg-base text-white py-2 px-6 rounded-lg font-semibold"
-                >
-                  Close
-                </button>
-              </>
-            )}
-          </div>
         </div>
       )}
     </div>
