@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -10,62 +10,91 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+interface Investment {
+  _id: string;
+  projectName: string;
+  amount: number;
+  currentValue: number;
+  expectedReturn: number;
+  riskLevel: string;
+  createdAt: string;
+}
+
 interface ChartData {
   month: string;
   value: number;
 }
 
-const LineChartt = () => {
-  const [data, setData] = useState<ChartData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface LineCharttProps {
+  investments: Investment[];
+}
 
-  useEffect(() => {
-    const fetchChartData = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/performance`,
-          { credentials: "include" }
-        );
+const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
+  // Transform investment data into monthly performance data
+  const chartData = useMemo(() => {
+    if (!investments.length) return [];
 
-        if (!res.ok) throw new Error("Failed to fetch performance data");
+    // Get the date range
+    const dates = investments.map(inv => new Date(inv.createdAt));
+    const oldestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const currentDate = new Date();
 
-        const result = await res.json();
-        setData(result); // Make sure backend returns [{ month: "Jan", value: 2 }, ...]
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Generate month array from oldest investment to now
+    const months: ChartData[] = [];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    let currentMonth = new Date(oldestDate);
+    currentMonth.setDate(1); // Start at beginning of month
 
-    fetchChartData();
-  }, []);
+    while (currentMonth <= currentDate) {
+      // For each month, calculate total portfolio value at that time
+      const monthValue = investments.reduce((total, investment) => {
+        const investmentDate = new Date(investment.createdAt);
+        
+        if (investmentDate <= currentMonth) {
+          // If investment existed in this month, add its projected value
+          const monthsSinceInvestment = (
+            (currentMonth.getFullYear() - investmentDate.getFullYear()) * 12 +
+            (currentMonth.getMonth() - investmentDate.getMonth())
+          );
+          
+          // Simple monthly growth calculation based on expected return
+          const monthlyRate = (investment.expectedReturn / 100) / 12;
+          const projectedValue = investment.amount * Math.pow(1 + monthlyRate, monthsSinceInvestment);
+          
+          return total + projectedValue;
+        }
+        return total;
+      }, 0);
 
-  if (loading) {
+      months.push({
+        month: `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`,
+        value: Math.round(monthValue / 1000) // Convert to thousands (k)
+      });
+
+      // Move to next month
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+
+    return months;
+  }, [investments]);
+
+  if (!investments.length) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
-        <p className="text-gray-500">Loading chart...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
-        <p className="text-red-500">{error}</p>
+        <p className="text-gray-500">No investment data available</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white backdrop-blur border border-white/20 p-6 rounded-2xl shadow-sm">
-      <p className="text-2xl font-semibold mb-4">Monthly Performance</p>
+      <p className="text-2xl font-semibold mb-4">Portfolio Performance</p>
 
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={data}
+            data={chartData}
             margin={{ top: 10, right: 30, left: -10, bottom: 0 }}
           >
             <defs>
@@ -87,12 +116,20 @@ const LineChartt = () => {
               tickLine={false}
               tick={{ fill: "#2e2e2e", fontSize: 14 }}
               padding={{ left: 20, right: 20 }}
+              // Show fewer ticks on mobile
+              interval={"preserveStartEnd"}
+              // Angle the labels for better fit
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
 
             <YAxis
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#2e2e2e", fontSize: 14 }}
+              // Format numbers as ₦Xk
+              tickFormatter={(value) => `₦${value}k`}
             />
 
             <Tooltip
@@ -100,9 +137,11 @@ const LineChartt = () => {
                 backgroundColor: "#597d4a",
                 borderRadius: "6px",
                 color: "#fff",
+                padding: "8px 12px",
               }}
-              labelStyle={{ fontWeight: "bold", color: "#fff" }}
-              formatter={(value) => [`₦${value}k`, "Portfolio Value"]}
+              labelStyle={{ fontWeight: "bold", color: "#fff", marginBottom: "4px" }}
+              formatter={(value: number) => [`₦${value.toLocaleString()}k`, "Portfolio Value"]}
+              labelFormatter={(label) => `${label}`}
             />
 
             <Line
@@ -121,6 +160,10 @@ const LineChartt = () => {
             />
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      
+      <div className="mt-4 text-sm text-gray-500 text-center">
+        {`Showing performance from ${chartData[0]?.month || 'N/A'} to ${chartData[chartData.length - 1]?.month || 'N/A'}`}
       </div>
     </div>
   );

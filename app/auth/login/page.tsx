@@ -35,8 +35,10 @@ const Page = () => {
       // ✅ Logged in successfully
       console.log("User:", data.user);
 
+      localStorage.setItem("user", data.user.id);
+
       // Example redirect after login:
-      window.location.href = `/dashboard/${data.user.id}`;
+      window.location.href = `/dashboard`;
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again later.");
@@ -48,7 +50,7 @@ const Page = () => {
   return (
     <div className="flex flex-col md:flex-row justify-center items-center w-screen h-screen">
       {/* LEFT SIDE */}
-      <div className="login h-full flex flex-col justify-between p-12 w-full md:w-[75%] bg-transparent">
+      <div className="login hidden lg:flex h-full flex-col justify-between p-12 w-full md:w-[75%] bg-transparent">
         <h1 className="font-semibold text-white text-2xl">ECOVEST</h1>
         <div>
           <h2 className="text-white mb-5 text-5xl md:text-6xl">
@@ -83,7 +85,6 @@ const Page = () => {
         </button>
 
         <form
-          onSubmit={handleLogin}
           className="max-w-md w-full flex flex-col gap-5"
         >
           <div className="flex flex-col gap-2">
@@ -116,9 +117,10 @@ const Page = () => {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
           <button
+            onClick={handleLogin}
             type="submit"
             disabled={loading}
-            className="p-3 mt-4 max-w-md w-full rounded-full border-2 border-base hover:bg-transparent hover:text-black justify-center items-center transition-all duration-300 bg-base text-white"
+            className="p-3 mt-4 flex max-w-md w-full rounded-full border-2 border-base hover:bg-transparent hover:text-black justify-center items-center transition-all duration-300 bg-base text-white"
           >
             {loading ? <div className="loader-light"></div> : "Login"}
           </button>

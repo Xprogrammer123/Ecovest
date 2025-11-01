@@ -6,12 +6,28 @@ import Recommended from "./components/recommended";
 import LineChartt from "./components/linechart";
 import { Disc2, Zap, TrendingUp, Globe, Leaf } from "lucide-react";
 
+interface Investment {
+  _id: string;
+  name: string;
+  sector: string;
+  initialAmount: number;
+  currentValue: number;
+  expectedReturn: number;
+  riskLevel: string;
+  startDate: string;
+  status: string;
+  sustainabilityScore: number;
+}
+
 interface DashboardData {
+  fullName: string;
+  demoBalance: number;
   portfolioValue: number;
   invested: number;
   predictedGrowth: number;
   sustainabilityScore: number;
-  investments: { id: number; name: string }[];
+  investmentGoal?: "sdg" | "profit" | "both";
+  investments: Investment[];
 }
 
 const Dashboard = () => {
@@ -22,25 +38,28 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        if (!user?.id) {
-          setError("User not found. Please log in again.");
+        const userId = localStorage.getItem("user")?.replace(/"/g, ""); // clean quotes
+        if (!userId) {
+          setError("Please log in to view your dashboard.");
           setLoading(false);
           return;
         }
 
+        setLoading(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/${user.id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/${userId}`,
           {
             method: "GET",
-            credentials: "include", // include cookies for session
-            headers: {
-              "Content-Type": "application/json",
-            },
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
           }
         );
 
         if (!response.ok) {
+          if (response.status === 401) {
+            setError("Please log in to view your dashboard.");
+            return;
+          }
           throw new Error(`Failed to fetch dashboard data`);
         }
 
@@ -59,28 +78,23 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#f8f9f8]">
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
       <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-        <Header />
+        <Header userName={data?.fullName ?? "User"} />
 
         {loading ? (
-          <p className="text-center text-gray-500 mt-10">
-            Loading dashboard...
-          </p>
+          <p className="text-center text-gray-500 mt-10">Loading dashboard...</p>
         ) : error ? (
           <p className="text-center text-red-500 mt-10">{error}</p>
         ) : (
           <>
-            {/* Top Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Portfolio Value */}
               <div className="portfolio text-white rounded-3xl relative overflow-hidden p-10">
                 <p className="text-2xl mb-3">Portfolio Value</p>
                 <h1 className="text-4xl md:text-5xl font-bold mt-1 mb-16">
-                  ₦{data?.portfolioValue?.toLocaleString() ?? "0"}
+                  ₦{data?.portfolioValue.toLocaleString() ?? "0"}
                 </h1>
                 <div className="flex items-center font-normal gap-3">
                   <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
@@ -88,10 +102,10 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <p className="text-xl font-semibold">
-                      ₦{data?.invested?.toLocaleString() ?? "0"} today
+                      ₦{data?.invested.toLocaleString() ?? "0"} invested
                     </p>
                     <p className="text-[#d4d4d4] text-sm font-medium">
-                      +{data?.predictedGrowth ?? 0}% this month
+                      +{data?.predictedGrowth.toFixed(1) ?? 0}% expected return
                     </p>
                   </div>
                 </div>
@@ -104,11 +118,11 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-7 h-7 text-gray-500" />
                       <p className="font-medium text-lg text-gray-700">
-                        Predicted Growth (6 mo)
+                        Predicted Growth
                       </p>
                     </div>
                     <span className="bg-green-500 text-white text-lg font-semibold px-5 py-1.5 rounded-full">
-                      +{data?.predictedGrowth ?? 0}%
+                      +{data?.predictedGrowth.toFixed(1) ?? 0}%
                     </span>
                   </div>
 
@@ -133,19 +147,31 @@ const Dashboard = () => {
                         }}
                       ></div>
                     </div>
+
                     <p className="text-gray-500 text-sm text-right">
-                      Excellent alignment with SDG goals
+                      {data?.investmentGoal === "sdg"
+                        ? "Excellent"
+                        : data?.investmentGoal === "both"
+                        ? "Good"
+                        : "Moderate"}{" "}
+                      alignment with SDG goals
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-5">
-                  <button className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2">
+                  <button
+                    className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2"
+                    onClick={() => (window.location.href = "/simulate")}
+                  >
                     <Zap className="w-6 h-6" />
                     <span>Simulate</span>
                   </button>
 
-                  <button className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2">
+                  <button
+                    className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2"
+                    onClick={() => (window.location.href = "/invest")}
+                  >
                     <Disc2 className="w-6 h-6" />
                     <span>Invest</span>
                   </button>
@@ -155,7 +181,7 @@ const Dashboard = () => {
 
             {/* Chart + Impact */}
             <div className="mt-6 space-y-5">
-              <LineChartt />
+              <LineChartt investments={data?.investments ?? []} />
 
               <div className="bg-white p-5 rounded-2xl shadow-sm">
                 <div className="flex items-start gap-4">
@@ -167,12 +193,14 @@ const Dashboard = () => {
                       Your Impact
                     </p>
                     <p className="text-sm text-gray-600">
-                      Your portfolio has offset{" "}
-                      <b className="text-base">5 tons</b> of CO₂, and supported{" "}
+                      Your portfolio has{" "}
                       <b className="text-base">
-                        {data?.investments?.length ?? 0} renewable energy
-                        projects
+                        {data?.investments?.length ?? 0} active investments
                       </b>
+                      {data?.investmentGoal === "sdg" &&
+                        " contributing to SDG goals"}
+                      {data?.investmentGoal === "both" &&
+                        " balancing profit and impact"}
                       .
                     </p>
                   </div>
@@ -180,7 +208,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <Recommended />
+            <Recommended aiPortfolio={[]} />
           </>
         )}
       </main>

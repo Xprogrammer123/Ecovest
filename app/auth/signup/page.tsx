@@ -49,7 +49,7 @@ const Page = () => {
   return (
     <div className="flex flex-col md:flex-row justify-center items-center w-screen h-screen">
       {/* LEFT SIDE */}
-      <div className="login h-full flex flex-col justify-between p-12 w-full md:w-[75%] bg-transparent">
+      <div className="login hidden h-full lg:flex flex-col justify-between p-12 w-full md:w-[75%] bg-transparent">
         <h1 className="font-semibold text-white text-2xl">ECOVEST</h1>
         <div>
           <h2 className="text-white mb-5 text-5xl md:text-6xl">
