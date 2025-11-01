@@ -35,41 +35,54 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
     if (!investments.length) return [];
 
     // Get the date range
-    const dates = investments.map(inv => new Date(inv.createdAt));
-    const oldestDate = new Date(Math.min(...dates.map(d => d.getTime())));
+    const dates = investments.map((inv) => new Date(inv.createdAt));
+    const oldestDate = new Date(Math.min(...dates.map((d) => d.getTime())));
     const currentDate = new Date();
 
     // Generate month array from oldest investment to now
     const months: ChartData[] = [];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
     let currentMonth = new Date(oldestDate);
-    currentMonth.setDate(1); // Start at beginning of month
+    currentMonth.setDate(1);
 
     while (currentMonth <= currentDate) {
-      // For each month, calculate total portfolio value at that time
       const monthValue = investments.reduce((total, investment) => {
         const investmentDate = new Date(investment.createdAt);
-        
+
         if (investmentDate <= currentMonth) {
-          // If investment existed in this month, add its projected value
-          const monthsSinceInvestment = (
+          const monthsSinceInvestment =
             (currentMonth.getFullYear() - investmentDate.getFullYear()) * 12 +
-            (currentMonth.getMonth() - investmentDate.getMonth())
-          );
-          
-          // Simple monthly growth calculation based on expected return
-          const monthlyRate = (investment.expectedReturn / 100) / 12;
-          const projectedValue = investment.amount * Math.pow(1 + monthlyRate, monthsSinceInvestment);
-          
+            (currentMonth.getMonth() - investmentDate.getMonth());
+
+          const monthlyRate = investment.expectedReturn / 100 / 12;
+          const projectedValue =
+            investment.amount *
+            Math.pow(1 + monthlyRate, monthsSinceInvestment);
+
           return total + projectedValue;
         }
         return total;
       }, 0);
 
       months.push({
-        month: `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`,
-        value: Math.round(monthValue / 1000) // Convert to thousands (k)
+        month: `${
+          monthNames[currentMonth.getMonth()]
+        } ${currentMonth.getFullYear()}`,
+        value: Math.round(monthValue / 1000), // Convert to thousands (k)
       });
 
       // Move to next month
@@ -139,8 +152,15 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
                 color: "#fff",
                 padding: "8px 12px",
               }}
-              labelStyle={{ fontWeight: "bold", color: "#fff", marginBottom: "4px" }}
-              formatter={(value: number) => [`₦${value.toLocaleString()}k`, "Portfolio Value"]}
+              labelStyle={{
+                fontWeight: "bold",
+                color: "#fff",
+                marginBottom: "4px",
+              }}
+              formatter={(value: number) => [
+                `₦${value.toLocaleString()}k`,
+                "Portfolio Value",
+              ]}
               labelFormatter={(label) => `${label}`}
             />
 
@@ -161,9 +181,11 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      
+
       <div className="mt-4 text-sm text-gray-500 text-center">
-        {`Showing performance from ${chartData[0]?.month || 'N/A'} to ${chartData[chartData.length - 1]?.month || 'N/A'}`}
+        {`Showing performance from ${chartData[0]?.month || "N/A"} to ${
+          chartData[chartData.length - 1]?.month || "N/A"
+        }`}
       </div>
     </div>
   );
