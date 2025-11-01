@@ -47,15 +47,15 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-center items-center w-screen h-screen">
-      {/* LEFT SIDE */}
-      <div className="login hidden h-full lg:flex flex-col justify-between p-12 w-full md:w-[75%] bg-transparent">
+    <div className="flex flex-col lg:flex-row justify-center items-center w-screen h-screen">
+      {/* LEFT SIDE — Banner (background image stays on large screens only) */}
+      <div className="login hidden lg:flex h-full flex-col justify-between p-12 w-1/2 bg-cover bg-center">
         <h1 className="font-semibold text-white text-2xl">ECOVEST</h1>
         <div>
-          <h2 className="text-white mb-5 text-5xl md:text-6xl">
+          <h2 className="text-white mb-5 text-5xl xl:text-6xl leading-tight">
             Invest in what <br /> powers tomorrow.
           </h2>
-          <p className="text-white/50">
+          <p className="text-white/60 text-lg max-w-md">
             We connect you to verified impact-focused startups driving real
             change across Africa, while helping you grow your portfolio with
             purpose.
@@ -63,25 +63,19 @@ const Page = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="h-full items-center gap-5 justify-center p-10 md:p-24 flex-col flex w-full bg-white">
+      {/* RIGHT SIDE — Form (visible on all screens) */}
+      <div className="flex flex-col items-center justify-center gap-6 p-8 md:p-16 w-full lg:w-1/2 bg-white h-full">
         <div className="text-center">
-          <h2 className="text-4xl md:text-5xl">
+          <h2 className="text-4xl md:text-4xl font-bold">
             Create an account with Ecovest
           </h2>
-          <p className="text-black/50">
-            Sign up with Ecovest to access latest investing finds
+          <p className="text-black/50 mt-2">
+            Sign up with Ecovest to access the latest investing finds
           </p>
         </div>
 
         <button className="border-2 max-w-md w-full justify-center items-center text-black font-medium border-base p-3 flex hover:bg-base hover:text-white transition-all duration-300 gap-2 rounded-full">
-          <Image
-            src="/google.svg"
-            alt="google"
-            width={24}
-            height={24}
-            className=""
-          />
+          <Image src="/google.svg" alt="google" width={24} height={24} />
           Continue with Google
         </button>
 
@@ -126,7 +120,7 @@ const Page = () => {
               placeholder="Enter your password..."
               required
             />
-            <p className="text-base">At least 8 characters</p>
+            <p className="text-sm text-gray-500">At least 8 characters</p>
           </div>
 
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -140,9 +134,12 @@ const Page = () => {
           </button>
         </form>
 
-        <div className="text-black/50">
+        <div className="text-black/50 text-center">
           Already have an account?{" "}
-          <Link href="/auth/login" className="text-base font-semibold">
+          <Link
+            href="/auth/login"
+            className="text-base font-semibold text-base"
+          >
             Log in
           </Link>
         </div>

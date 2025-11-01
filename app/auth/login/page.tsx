@@ -66,7 +66,7 @@ const Page = () => {
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
+      
       <div className="h-full items-center gap-5 justify-center p-10 md:p-24 flex-col flex w-full bg-white">
         <div className="text-center">
           <h2 className="text-4xl md:text-5xl">Welcome Back</h2>
