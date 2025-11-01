@@ -126,7 +126,69 @@ const Dashboard = () => {
 
               {/* Growth + Sustainability */}
               <div className="bg-white rounded-2xl p-8 md:p-10 shadow-sm flex flex-col justify-between">
-                {/* ...rest unchanged */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-7 h-7 text-gray-500" />
+                      <p className="font-medium text-lg text-gray-700">
+                        Predicted Growth
+                      </p>
+                    </div>
+                    <span className="bg-green-500 text-white text-lg font-semibold px-5 py-1.5 rounded-full">
+                      +{data?.predictedGrowth.toFixed(1) ?? 0}%
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Globe className="w-8 h-8 text-base" />
+                        <p className="font-medium text-lg text-gray-700">
+                          Sustainability Score
+                        </p>
+                      </div>
+                      <span className="font-semibold text-lg">
+                        {data?.sustainabilityScore ?? 0}/100
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                      <div
+                        className="bg-base h-3 rounded-full transition-all"
+                        style={{
+                          width: `${data?.sustainabilityScore ?? 0}%`,
+                        }}
+                      ></div>
+                    </div>
+
+                    <p className="text-gray-500 text-sm text-right">
+                      {data?.investmentGoal === "sdg"
+                        ? "Excellent"
+                        : data?.investmentGoal === "both"
+                        ? "Good"
+                        : "Moderate"}{" "}
+                      alignment with SDG goals
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-5">
+                  <button
+                    className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2"
+                    onClick={() => router.push("/simulate")}
+                  >
+                    <Zap className="w-6 h-6" />
+                    <span>Simulate</span>
+                  </button>
+
+                  <button
+                    className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2"
+                    onClick={() => router.push("/invest")}
+                  >
+                    <Disc2 className="w-6 h-6" />
+                    <span>Invest</span>
+                  </button>
+                </div>
               </div>
             </div>
 
