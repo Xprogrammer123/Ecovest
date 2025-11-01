@@ -39,7 +39,6 @@ const Dashboard = () => {
     }
   };
 
-  // 📊 Fetch dashboard data
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -139,7 +138,7 @@ const Dashboard = () => {
           <div className="portfolio text-white rounded-3xl relative overflow-hidden p-10">
             <p className="text-2xl mb-3">Portfolio Value</p>
             <h1 className="text-4xl md:text-5xl font-bold mt-1 mb-16">
-              ₦{data?.portfolioValue.toLocaleString() ?? "0"}
+              ₦{data?.demoBalance.toLocaleString() ?? "0"}
             </h1>
             <div className="flex items-center font-normal gap-3">
               <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
