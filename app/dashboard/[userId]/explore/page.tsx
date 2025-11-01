@@ -117,8 +117,10 @@ const Explore = () => {
             <div className="flex justify-between items-center mb-3">
               <div>
                 <div className="flex items-center gap-2 text-base font-semibold">
-                  <TrendingUp size={18} />
-                  <span>{item.expected_return_percent} (annum)</span>
+                  <div className="w-12 h-10 rounded-lg bg-gray-300 flex items-center justify-center">
+                    <TrendingUp className="w-8 h-8 text-base" />
+                  </div>
+                  <span>{item.expected_return_percent}% (annum)</span>
                 </div>
                 <p className="text-gray-500 text-xs">Expected return</p>
               </div>
