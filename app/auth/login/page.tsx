@@ -38,7 +38,7 @@ const Page = () => {
       localStorage.setItem("user", data.user.id);
 
       // Example redirect after login:
-      window.location.href = `/dashboard`;
+      window.location.href = `/dashboard/${data.user.id}`;
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again later.");
@@ -84,9 +84,7 @@ const Page = () => {
           Continue with Google
         </button>
 
-        <form
-          className="max-w-md w-full flex flex-col gap-5"
-        >
+        <form className="max-w-md w-full flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label htmlFor="email">Email</label>
             <input
