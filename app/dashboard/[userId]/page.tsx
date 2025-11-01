@@ -26,16 +26,13 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useParams();
-  const userId = params?.id; // ✅ from /dashboard/[id]
+  const userId = params?.id;
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      if (!userId) return;
+      console.log("Fetching dashboard data...");
 
       try {
-        setLoading(true);
-        setError("");
-
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/dashboard/${userId}`,
           {
@@ -45,26 +42,30 @@ const Dashboard = () => {
           }
         );
 
+        console.log("Response status:", response.status);
+
+        const text = await response.text();
+        console.log("Raw response:", text);
+
         if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            router.push("/auth/login");
-            return;
-          }
-          throw new Error("Failed to fetch dashboard data");
+          console.error("Fetch failed:", response.statusText);
+          setError("Failed to load dashboard");
+          return;
         }
 
-        const result: DashboardData = await response.json();
+        const result = JSON.parse(text);
+        console.log("Dashboard data:", result);
         setData(result);
       } catch (err) {
-        console.error("Dashboard fetch error:", err);
-        setError("Something went wrong while loading your dashboard.");
+        console.error("Error fetching dashboard:", err);
+        setError("Something went wrong");
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboard();
-  }, [userId, router]);
+  }, [userId]);
 
   if (loading) {
     return (
