@@ -1,18 +1,43 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Home, Compass, BarChart2, Globe2, User } from "lucide-react";
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
 
+  // 🧭 Load userId from localStorage and redirect if missing
+  useEffect(() => {
+    const storedId = localStorage.getItem("user")?.replace(/"/g, "");
+    if (storedId) {
+      setUserId(storedId);
+    } else {
+      router.push("/auth/login"); // Redirect if user not logged in
+    }
+  }, [router]);
+
+  // 🧩 Sidebar routes
   const menu = [
-    { name: "Overview", icon: <Home size={22} />, path: "/dashboard" },
-    { name: "Explore", icon: <Compass size={22} />, path: "/explore" },
-    { name: "Portfolio", icon: <BarChart2 size={22} />, path: "/portfolio" },
-    { name: "Simulator", icon: <Globe2 size={22} />, path: "/simulator" },
-    { name: "Profile", icon: <User size={22} />, path: "/profile" },
+    { name: "Overview", icon: <Home size={22} />, basePath: "/dashboard" },
+    { name: "Explore", icon: <Compass size={22} />, basePath: "/explore" },
+    {
+      name: "Portfolio",
+      icon: <BarChart2 size={22} />,
+      basePath: "/portfolio",
+    },
+    { name: "Simulator", icon: <Globe2 size={22} />, basePath: "/simulator" },
+    { name: "Profile", icon: <User size={22} />, basePath: "/profile" },
   ];
+
+  // 🧩 Add userId to all routes
+  const getFullPath = (basePath: string) =>
+    userId ? `${basePath}/${userId}` : basePath;
+
+  // 🧩 Detect active route
+  const isActiveRoute = (path: string) => pathname.startsWith(path);
 
   return (
     <>
@@ -24,12 +49,13 @@ const Sidebar = () => {
 
         <nav className="flex flex-col gap-4 w-full px-6">
           {menu.map((item) => {
-            const isActive = pathname === item.path;
+            const fullPath = getFullPath(item.basePath);
+            const isActive = isActiveRoute(fullPath);
 
             return (
               <Link
                 key={item.name}
-                href={item.path}
+                href={fullPath}
                 className={`flex items-center gap-3 text-lg font-medium py-3 px-4 rounded-xl transition-all duration-150 ${
                   isActive
                     ? "bg-base text-white"
@@ -44,18 +70,20 @@ const Sidebar = () => {
         </nav>
       </aside>
 
+      {/* 📱 Mobile Bottom Navigation */}
       <div
         className="fixed bottom-0 left-0 right-0 md:hidden flex justify-around items-center py-3 
-        bg-base/10 backdrop-blur-lg border-t border-white/20 shadow-2xl rounded-full z-99 mb-4"
+        bg-base/10 backdrop-blur-lg border-t border-white/20 shadow-2xl rounded-full z-50 mb-4"
       >
         {menu.map((item) => {
-          const isActive = pathname === item.path;
+          const fullPath = getFullPath(item.basePath);
+          const isActive = isActiveRoute(fullPath);
 
           return (
             <Link
               key={item.name}
-              href={item.path}
-              className={`flex flex-col items-center text-sm font-medium transition-all duration-150  ${
+              href={fullPath}
+              className={`flex flex-col items-center text-sm font-medium transition-all duration-150 ${
                 isActive
                   ? "text-base font-semibold"
                   : "text-black hover:text-base"
