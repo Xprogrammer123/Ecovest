@@ -9,16 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-interface Investment {
-  _id: string;
-  projectName: string;
-  amount: number;
-  currentValue: number;
-  expectedReturn: number;
-  riskLevel: string;
-  createdAt: string;
-}
+import { Investment } from "@/app/types/investment"; // ✅ Shared type import
 
 interface ChartData {
   month: string;
@@ -129,9 +120,7 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
               tickLine={false}
               tick={{ fill: "#2e2e2e", fontSize: 14 }}
               padding={{ left: 20, right: 20 }}
-              // Show fewer ticks on mobile
               interval={"preserveStartEnd"}
-              // Angle the labels for better fit
               angle={-45}
               textAnchor="end"
               height={60}
@@ -141,7 +130,6 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "#2e2e2e", fontSize: 14 }}
-              // Format numbers as ₦Xk
               tickFormatter={(value) => `₦${value}k`}
             />
 

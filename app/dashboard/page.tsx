@@ -5,19 +5,7 @@ import Header from "./components/header";
 import Recommended from "./components/recommended";
 import LineChartt from "./components/linechart";
 import { Disc2, Zap, TrendingUp, Globe, Leaf } from "lucide-react";
-
-interface Investment {
-  _id: string;
-  name: string;
-  sector: string;
-  initialAmount: number;
-  currentValue: number;
-  expectedReturn: number;
-  riskLevel: string;
-  startDate: string;
-  status: string;
-  sustainabilityScore: number;
-}
+import { Investment } from "@/app/types/investment"; // ✅ shared type import
 
 interface DashboardData {
   fullName: string;
@@ -38,7 +26,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const userId = localStorage.getItem("user")?.replace(/"/g, ""); // clean quotes
+        const userId = localStorage.getItem("user")?.replace(/"/g, "");
         if (!userId) {
           setError("Please log in to view your dashboard.");
           setLoading(false);
@@ -84,7 +72,9 @@ const Dashboard = () => {
         <Header userName={data?.fullName ?? "User"} />
 
         {loading ? (
-          <p className="text-center text-gray-500 mt-10">Loading dashboard...</p>
+          <p className="text-center text-gray-500 mt-10">
+            Loading dashboard...
+          </p>
         ) : error ? (
           <p className="text-center text-red-500 mt-10">{error}</p>
         ) : (
@@ -179,7 +169,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart + Impact */}
             <div className="mt-6 space-y-5">
               <LineChartt investments={data?.investments ?? []} />
 
@@ -208,7 +197,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <Recommended aiPortfolio={[]} />
+            <Recommended />
           </>
         )}
       </main>
