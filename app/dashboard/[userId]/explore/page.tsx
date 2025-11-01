@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, TrendingUp } from "lucide-react";
+import { Globe, TrendingUp, Disc2 } from "lucide-react";
 
 interface Recommendation {
   name: string;
@@ -57,7 +57,7 @@ const Explore = () => {
 
   if (loading) {
     return (
-      <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="px-2 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
@@ -77,7 +77,7 @@ const Explore = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="px-2 py-6">
       {/* Search + Filters */}
       <div className="mb-6 flex flex-col md:flex-row gap-4 items-center">
         <input
@@ -107,17 +107,16 @@ const Explore = () => {
             key={index}
             className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              {item.name}
-            </h3>
-            <p className="text-gray-500 text-sm mb-2">{item.sector}</p>
-            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+            <p className="text-lg font-semibold text-black mb-1">{item.name}</p>
+            <p className="text-gray-500 text-sm mb-2 font-semibold">
+              {item.sector}
+            </p>
+            <p className="text-black text-sm mb-3 line-clamp-2">
               {item.description}
             </p>
-
             <div className="flex justify-between items-center mb-3">
               <div>
-                <div className="flex items-center gap-2 text-base text-gray-700">
+                <div className="flex items-center gap-2 text-base font-semibold">
                   <TrendingUp size={18} />
                   <span>{item.expected_return_percent} (annum)</span>
                 </div>
@@ -125,28 +124,30 @@ const Explore = () => {
               </div>
 
               <div className="text-right">
-                <p className="text-gray-700 font-semibold">
+                <p className="text-base font-semibold">
                   ₦{item.minimum_investment.toLocaleString()}
                 </p>
                 <p className="text-gray-500 text-xs">Minimum Investment</p>
               </div>
             </div>
-
             <div className="flex items-center justify-between mt-2 mb-4">
               <div className="flex items-center gap-2 text-gray-700">
-                <Globe size={18} />
-                <span className="text-sm">
-                  Sustainability Score {item.sustainability_score}/100
+                <Globe size={20} className="text-base" />
+                <span className="text-sm text-black">
+                  Sustainability Score{" "}
+                  <span className="text-right font-semibold">
+                    {item.sustainability_score}/100
+                  </span>
                 </span>
               </div>
             </div>
-
             <button
+              className="mt-6 bg-base text-white py-3 rounded-lg flex items-center justify-center space-x-2"
               onClick={() => handleInvest(item)}
-              className="w-full py-2.5 bg-[#3b7d3b] text-white font-semibold rounded-xl hover:bg-[#2f682f] transition-all"
             >
-              Invest
-            </button>
+              <Disc2 className="w-7 h-7 text-white" />
+              <span className="text-lg font-bold">Invest</span>
+            </button>{" "}
           </div>
         ))}
       </div>

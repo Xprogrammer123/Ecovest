@@ -50,7 +50,7 @@ const Recommended = () => {
   // ✨ Shimmer Loading UI
   if (loading) {
     return (
-      <div className="mt-6 bg-white rounded-2xl p-6 md:p-8 animate-pulse">
+      <div className="mt-6 bg-white rounded-2xl p-6 md:p-2 animate-pulse">
         <p className="text-xl md:text-2xl font-semibold mb-5">
           Generating AI recommendations...
         </p>
@@ -65,7 +65,7 @@ const Recommended = () => {
 
   if (error) {
     return (
-      <div className="mt-6 bg-white rounded-2xl p-6 md:p-8 text-center">
+      <div className="mt-6 bg-white rounded-2xl p-6 md:p-2 text-center">
         <p className="text-red-500 font-medium mb-4">{error}</p>
         <p className="text-gray-500 text-sm">
           Try logging in again or refreshing the page.
@@ -89,7 +89,7 @@ const Recommended = () => {
           {recommendations.map((rec) => (
             <div
               key={rec.id}
-              className="rounded-2xl p-5 flex flex-col justify-between shadow-sm bg-[#f8f9f8] transition hover:shadow-md"
+              className="rounded-2xl p-2 flex flex-col justify-between shadow-sm bg-[#f8f9f8] transition hover:shadow-md"
             >
               <div>
                 <p className="font-semibold text-[#1c1c1c] text-[17px] mb-1">
