@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Sidebar from "./components/sidebar";
-import Header from "./components/header";
-import Recommended from "./components/recommended";
-import LineChartt from "./components/linechart";
+import Sidebar from "../components/sidebar";
+import Header from "../components/header";
+import Recommended from "../components/recommended";
+import LineChartt from "../components/linechart";
 import { Disc2, Zap, TrendingUp, Globe, Leaf } from "lucide-react";
 import { Investment } from "@/app/types/investment"; // ✅ shared type import
 
