@@ -19,17 +19,25 @@ const Recommended = () => {
     const fetchRecommendations = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/recommended`,
-          { credentials: "include" }
+          `${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          }
         );
 
         if (!res.ok) {
-          throw new Error("Failed to fetch recommendations");
+          if (res.status === 401) {
+            throw new Error("Please log in to see AI recommendations.");
+          }
+          throw new Error("Failed to fetch recommendations.");
         }
 
         const data = await res.json();
-        setRecommendations(data);
+        setRecommendations(data.aiPortfolio || []);
       } catch (err: any) {
+        console.error("AI fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -39,16 +47,31 @@ const Recommended = () => {
     fetchRecommendations();
   }, []);
 
+  // ✨ Shimmer Loading UI
   if (loading) {
     return (
-      <p className="text-center text-gray-500 mt-10">
-        Loading recommendations...
-      </p>
+      <div className="mt-6 bg-white rounded-2xl p-6 md:p-8 animate-pulse">
+        <p className="text-xl md:text-2xl font-semibold mb-5">
+          Generating AI recommendations...
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-2xl p-5 bg-gray-200 h-48"></div>
+          ))}
+        </div>
+      </div>
     );
   }
 
   if (error) {
-    return <p className="text-center text-red-500 mt-10">{error}</p>;
+    return (
+      <div className="mt-6 bg-white rounded-2xl p-6 md:p-8 text-center">
+        <p className="text-red-500 font-medium mb-4">{error}</p>
+        <p className="text-gray-500 text-sm">
+          Try logging in again or refreshing the page.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -59,7 +82,7 @@ const Recommended = () => {
 
       {recommendations.length === 0 ? (
         <p className="text-gray-500 text-center">
-          No recommendations available
+          No AI recommendations yet. Try generating again later.
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
