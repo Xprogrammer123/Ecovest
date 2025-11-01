@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
-const Header = () => {
+const Header = ({userName} : {userName: string}) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -36,7 +36,7 @@ const Header = () => {
           <div className="hidden xs:block text-left">
             <p className="text-[12px] sm:text-sm text-[#888]">Welcome back</p>
             <p className="text-sm sm:text-base font-semibold text-[#1c1c1c]">
-              Judah Oyedele
+              {userName}
             </p>
           </div>
 
