@@ -52,7 +52,6 @@ const Explore = () => {
 
   const handleInvest = async (item: Recommendation, index: number) => {
     try {
-      // Get the user ID — from your session or localStorage
       const userData = localStorage.getItem("user");
       const userId = userData ? JSON.parse(userData)?.id : null;
 
@@ -62,18 +61,29 @@ const Explore = () => {
         return;
       }
 
-      // Simulate investment projection
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recommendation: item,
-          recommendationIndex: index,
-        }),
-      });
+      // 🔹 Step 1: Simulate investment projection
+      const simulateResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recommendation: item,
+            recommendationIndex: index,
+          }),
+        }
+      );
 
-      // Create the actual investment
+      // ✅ Try parsing safely (ignore invalid JSON)
+      let simulateData = null;
+      try {
+        simulateData = await simulateResponse.json();
+      } catch {
+        console.warn("Simulation response not JSON");
+      }
+
+      // 🔹 Step 2: Create the actual investment
       const investResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/invest`,
         {
@@ -88,11 +98,24 @@ const Explore = () => {
         }
       );
 
-      if (!investResponse.ok) throw new Error("Investment creation failed");
+      // ✅ Parse safely again
+      let investData = null;
+      try {
+        investData = await investResponse.json();
+      } catch {
+        console.warn("Investment response not JSON");
+      }
+
+      if (!investResponse.ok) {
+        console.error("Invest API failed:", investData);
+        alert("Investment creation failed.");
+        return;
+      }
 
       // Save selected recommendation
       localStorage.setItem("selectedRecommendation", JSON.stringify(item));
 
+      // ✅ Navigate correctly
       router.push(`/dashboard/${userId}`);
     } catch (err) {
       console.error("Investment error:", err);
