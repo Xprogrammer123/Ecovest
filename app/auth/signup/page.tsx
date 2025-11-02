@@ -37,7 +37,7 @@ const Page = () => {
       }
 
       console.log("User registered:", data.user);
-      window.location.href = `/login`;
+      window.location.href = `/auth/login`;
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Please try again later.");
