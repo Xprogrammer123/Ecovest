@@ -22,7 +22,7 @@ const Header = ({ userName }: { userName: string }) => {
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 sm:gap-3 bg-white py-1.5 px-3 sm:px-4 rounded-full focus:outline-none shadow-sm hover:shadow transition-all duration-200"
+          className="flex items-center gap-2 sm:gap-3 bg-white py-1.5 pr-3 pl-3 sm:pr-4 sm:pl-2 rounded-full focus:outline-none shadow-sm hover:shadow transition-all duration-200"
         >
           <Image
             src="/dp.svg"
