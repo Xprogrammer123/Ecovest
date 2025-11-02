@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, TrendingUp, Disc2 } from "lucide-react";
+import { investApi } from "@/lib/investApi";
 
 interface Recommendation {
   name: string;
@@ -25,19 +26,17 @@ const Explore = () => {
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate`,
           {
             method: "POST",
             credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
           }
         );
 
-        if (!response.ok) throw new Error("Failed to fetch recommendations");
-        const data = await response.json();
+        if (!res.ok) throw new Error("Failed to fetch recommendations");
+        const data = await res.json();
         setRecommendations(data.aiPortfolio || []);
       } catch (err) {
         console.error(err);
@@ -50,7 +49,7 @@ const Explore = () => {
     fetchRecommendations();
   }, []);
 
-  const handleInvest = async (item: Recommendation, index: number) => {
+  const handleInvest = async (item: Recommendation) => {
     try {
       const userData = localStorage.getItem("user");
       const userId = userData ? JSON.parse(userData)?.id : null;
@@ -61,61 +60,12 @@ const Explore = () => {
         return;
       }
 
-      // 🔹 Step 1: Simulate investment projection
-      const simulateResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recommendation: item,
-            recommendationIndex: index,
-          }),
-        }
-      );
+      await investApi.simulate(item, item.minimum_investment);
 
-      // ✅ Try parsing safely (ignore invalid JSON)
-      let simulateData = null;
-      try {
-        simulateData = await simulateResponse.json();
-      } catch {
-        console.warn("Simulation response not JSON");
-      }
+      await investApi.create(item, item.minimum_investment);
 
-      // 🔹 Step 2: Create the actual investment
-      const investResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invest`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recommendationIndex: index,
-            recommendation: item,
-            amount: item.minimum_investment,
-          }),
-        }
-      );
-
-      // ✅ Parse safely again
-      let investData = null;
-      try {
-        investData = await investResponse.json();
-      } catch {
-        console.warn("Investment response not JSON");
-      }
-
-      if (!investResponse.ok) {
-        console.error("Invest API failed:", investData);
-        alert("Investment creation failed.");
-        return;
-      }
-
-      // Save selected recommendation
       localStorage.setItem("selectedRecommendation", JSON.stringify(item));
 
-      // ✅ Navigate correctly
       router.push(`/dashboard/${userId}`);
     } catch (err) {
       console.error("Investment error:", err);
@@ -125,7 +75,7 @@ const Explore = () => {
 
   if (loading) {
     return (
-      <div className="px-2 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="px-4 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
@@ -145,20 +95,20 @@ const Explore = () => {
   }
 
   return (
-    <div className="px-2 py-6">
-      {/* Search + Filters */}
-      <div className="mb-6 flex flex-col md:flex-row gap-4 items-center">
+    <div className="px-4 py-8">
+      {/* Search and Filters */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
         <input
           type="text"
           placeholder="Search investments or describe your goals..."
-          className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-base"
+          className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-base/60"
         />
         <div className="flex flex-wrap gap-2">
           {["All Sectors", "SDG Focus", "Risk Level", "Min. Investment"].map(
             (f) => (
               <button
                 key={f}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100 transition"
               >
                 {f}
               </button>
@@ -183,41 +133,36 @@ const Explore = () => {
             </p>
 
             <div className="flex justify-between items-center mb-3">
-              <div>
-                <div className="flex items-center gap-2 text-base font-semibold">
-                  <div className="w-12 h-10 rounded-lg bg-gray-300 flex items-center justify-center">
-                    <TrendingUp className="w-8 h-8 text-base" />
-                  </div>
-                  <span>{item.expected_return_percent}% (annum)</span>
+              <div className="flex items-center gap-2 text-base font-semibold">
+                <div className="w-12 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-green-600" />
                 </div>
-                <p className="text-gray-500 text-xs">Expected return</p>
+                <span>{item.expected_return_percent}% (annum)</span>
               </div>
               <div className="text-right">
-                <p className="text-base font-semibold">
+                <p className="text-base font-semibold text-gray-900">
                   ₦{item.minimum_investment.toLocaleString()}
                 </p>
-                <p className="text-gray-500 text-xs">Minimum Investment</p>
+                <p className="text-gray-500 text-xs">Min. Investment</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-2 mb-4">
-              <div className="flex items-center gap-2 text-gray-700">
-                <Globe size={20} className="text-base" />
-                <span className="text-sm text-black">
-                  Sustainability Score{" "}
-                  <span className="font-semibold">
-                    {item.sustainability_score}/100
-                  </span>
+            <div className="flex items-center gap-2 text-gray-700 mb-4">
+              <Globe size={18} className="text-green-600" />
+              <span className="text-sm">
+                Sustainability Score{" "}
+                <span className="font-semibold">
+                  {item.sustainability_score}/100
                 </span>
-              </div>
+              </span>
             </div>
 
             <button
-              className="mt-6 bg-base text-white py-3 rounded-lg flex items-center justify-center space-x-2"
-              onClick={() => handleInvest(item, index)}
+              className="w-full bg-base text-white py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition"
+              onClick={() => handleInvest(item)}
             >
-              <Disc2 className="w-7 h-7 text-white" />
-              <span className="text-lg font-bold">Invest</span>
+              <Disc2 className="w-6 h-6 text-white" />
+              <span className="font-semibold text-lg">Invest</span>
             </button>
           </div>
         ))}
