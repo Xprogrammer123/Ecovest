@@ -103,7 +103,7 @@ const Recommended = () => {
                     <TrendingUp className="w-8 h-8 text-base" />
                   </div>
                   <p className="text-[#426b1f] font-semibold ml-2">
-                    {rec.expected_return_percent}
+                    {rec.expected_return_percent}%
                     <br />
                     <span className="text-[#8b8b8b] text-sm font-semibold">
                       Expected return
