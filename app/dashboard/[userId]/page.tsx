@@ -224,7 +224,7 @@ const DashboardPage = () => {
         {/* Portfolio Value */}
         <div className="portfolio text-white rounded-3xl relative overflow-hidden sm:p-10 p-5">
           <p className="text-2xl mb-3">Portfolio Value</p>
-          <h1 className="text-[clamp(1.875rem, 3vw + 1rem, 3rem)] font-bold mt-1 mb-16">
+          <h1 className="text-3xl md:text-4xl lg:5xl  font-bold mt-1 mb-16">
             ₦{data?.demoBalance.toLocaleString() ?? "0"}
           </h1>
           <div className="flex items-center font-normal gap-3">
