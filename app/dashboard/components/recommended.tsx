@@ -4,10 +4,10 @@ import { TrendingDown, TrendingUp, Disc2 } from "lucide-react";
 
 interface Recommendation {
   id: number;
-  title: string;
-  sdg: string;
-  expectedReturn: string;
-  expectedRisk: string;
+  name: string;
+  sector: string;
+  expected_return_percent: string;
+  risk_level: string;
 }
 
 const Recommended = () => {
@@ -93,9 +93,9 @@ const Recommended = () => {
             >
               <div>
                 <p className="font-semibold text-[#1c1c1c] text-[17px] mb-1">
-                  {rec.title}
+                  {rec.name}
                 </p>
-                <p className="text-[#777] text-sm mb-4">{rec.sdg}</p>
+                <p className="text-[#777] text-sm mb-4">{rec.sector}</p>
 
                 {/* Expected Return */}
                 <div className="flex items-center font-normal gap-2 mb-3">
@@ -103,7 +103,7 @@ const Recommended = () => {
                     <TrendingUp className="w-8 h-8 text-base" />
                   </div>
                   <p className="text-[#426b1f] font-semibold ml-2">
-                    {rec.expectedReturn}
+                    {rec.expected_return_percent}
                     <br />
                     <span className="text-[#8b8b8b] text-sm font-semibold">
                       Expected return
@@ -117,7 +117,7 @@ const Recommended = () => {
                     <TrendingDown className="w-8 h-8 text-red-500" />
                   </div>
                   <p className="text-[#c53b3b] font-semibold">
-                    {rec.expectedRisk}
+                    {rec.risk_level}
                     <br />
                     <span className="text-[#8b8b8b] text-sm font-semibold">
                       Expected risk
