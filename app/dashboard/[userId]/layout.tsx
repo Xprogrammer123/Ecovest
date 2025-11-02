@@ -12,7 +12,9 @@ export default function DashboardLayout({
     <div className="flex flex-col md:flex-row min-h-screen bg-[#f8f9f8]">
       <Sidebar />
 
-      <main className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</main>
+      <main className="flex-1 p-4 md:p-6 overflow-y-auto md:ml-[22rem]">
+        {children}
+      </main>
     </div>
   );
 }
