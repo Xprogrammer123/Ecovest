@@ -47,7 +47,6 @@ const Sidebar = () => {
     },
   ];
 
-
   const isActiveRoute = (path: string) => pathname === path;
 
   if (!userId) return null; // Wait for userId to load
@@ -55,7 +54,7 @@ const Sidebar = () => {
   return (
     <>
       {/* 🖥️ Desktop Sidebar */}
-      <aside className="hidden md:flex w-80 bg-white rounded-2xl h-screen flex-col py-8 ml-6 mt-6 shadow-md">
+      <aside className="hidden md:flex fixed left-6 top-6 w-80 bg-white rounded-2xl h-[calc(100vh-3rem)] flex-col py-8 shadow-md overflow-y-auto">
         <h1 className="text-3xl font-extrabold mb-10 ml-10 text-base">
           ECOVEST
         </h1>
@@ -83,7 +82,6 @@ const Sidebar = () => {
         </nav>
       </aside>
 
-  
       <div
         className="fixed bottom-0 left-0 right-0 md:hidden flex justify-around items-center py-3 
         bg-base/10 backdrop-blur-lg border-t border-white/20 shadow-2xl rounded-full z-50 mb-4 w-[95%] ml-2.5"
