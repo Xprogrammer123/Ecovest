@@ -1,8 +1,7 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, TrendingUp, Disc2, Search } from "lucide-react";
+import { Globe, TrendingUp, Disc2 } from "lucide-react";
 
 interface Recommendation {
   name: string;
@@ -31,12 +30,13 @@ const Explore = () => {
           {
             method: "POST",
             credentials: "include",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+            },
           }
         );
 
         if (!response.ok) throw new Error("Failed to fetch recommendations");
-
         const data = await response.json();
         setRecommendations(data.aiPortfolio || []);
       } catch (err) {
@@ -50,18 +50,63 @@ const Explore = () => {
     fetchRecommendations();
   }, []);
 
-  const handleInvest = (item: Recommendation) => {
-    localStorage.setItem("selectedRecommendation", JSON.stringify(item));
-    router.push("/dashboard");
+  const handleInvest = async (item: Recommendation, index: number) => {
+    try {
+      // Get the user ID — from your session or localStorage
+      const userData = localStorage.getItem("user");
+      const userId = userData ? JSON.parse(userData)?.id : null;
+
+      if (!userId) {
+        alert("User ID not found. Please log in again.");
+        router.push("/auth/login");
+        return;
+      }
+
+      // Simulate investment projection
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recommendation: item,
+          recommendationIndex: index,
+        }),
+      });
+
+      // Create the actual investment
+      const investResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invest`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recommendationIndex: index,
+            recommendation: item,
+            amount: item.minimum_investment,
+          }),
+        }
+      );
+
+      if (!investResponse.ok) throw new Error("Investment creation failed");
+
+      // Save selected recommendation
+      localStorage.setItem("selectedRecommendation", JSON.stringify(item));
+
+      router.push(`/dashboard/${userId}`);
+    } catch (err) {
+      console.error("Investment error:", err);
+      alert("Failed to create investment. Please try again.");
+    }
   };
 
   if (loading) {
     return (
-      <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {[...Array(6)].map((_, i) => (
+      <div className="px-2 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="animate-pulse bg-gray-200 h-72 rounded-2xl shadow-sm"
+            className="animate-pulse bg-gray-200 h-64 rounded-2xl"
           ></div>
         ))}
       </div>
@@ -70,106 +115,86 @@ const Explore = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <p className="text-red-500 font-semibold mb-4">{error}</p>
-        <button
-          onClick={() => router.refresh()}
-          className="bg-base text-white px-5 py-2 rounded-lg font-medium hover:opacity-90 transition"
-        >
-          Retry
-        </button>
+      <div className="flex items-center justify-center h-screen text-red-500 text-lg font-medium">
+        {error}
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-8">
-      {/* Top Bar */}
-      <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="relative w-full md:w-1/2">
-          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search investments or describe your goals..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-base focus:border-transparent outline-none"
-          />
-        </div>
-
+    <div className="px-2 py-6">
+      {/* Search + Filters */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4 items-center">
+        <input
+          type="text"
+          placeholder="Search investments or describe your goals..."
+          className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-base"
+        />
         <div className="flex flex-wrap gap-2">
           {["All Sectors", "SDG Focus", "Risk Level", "Min. Investment"].map(
-            (filter) => (
+            (f) => (
               <button
-                key={filter}
-                className="px-4 py-2 text-sm border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition"
+                key={f}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100"
               >
-                {filter}
+                {f}
               </button>
             )
           )}
         </div>
       </div>
 
-      {/* Investment Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {recommendations.map((item, index) => (
           <div
             key={index}
-            className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 p-6 flex flex-col justify-between"
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
           >
-            <div>
-              <h2 className="text-xl font-semibold text-[#1C1C1C] mb-1">
-                {item.name}
-              </h2>
-              <p className="text-gray-500 text-sm font-medium mb-2">
-                {item.sector}
-              </p>
-              <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-3">
-                {item.description}
-              </p>
+            <p className="text-lg font-semibold text-black mb-1">{item.name}</p>
+            <p className="text-gray-500 text-sm mb-2 font-semibold">
+              {item.sector}
+            </p>
+            <p className="text-black text-sm mb-3 line-clamp-2">
+              {item.description}
+            </p>
 
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-12 h-12 rounded-xl bg-[#F3F4F6] flex items-center justify-center">
-                      <TrendingUp className="text-base w-6 h-6 text-[#1C1C1C]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {item.expected_return_percent}% p.a.
-                      </p>
-                      <p className="text-xs text-gray-500">Expected Return</p>
-                    </div>
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <div className="flex items-center gap-2 text-base font-semibold">
+                  <div className="w-12 h-10 rounded-lg bg-gray-300 flex items-center justify-center">
+                    <TrendingUp className="w-8 h-8 text-base" />
                   </div>
+                  <span>{item.expected_return_percent}% (annum)</span>
                 </div>
-
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-[#1C1C1C]">
-                    ₦{item.minimum_investment.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500">Min. Investment</p>
-                </div>
+                <p className="text-gray-500 text-xs">Expected return</p>
               </div>
+              <div className="text-right">
+                <p className="text-base font-semibold">
+                  ₦{item.minimum_investment.toLocaleString()}
+                </p>
+                <p className="text-gray-500 text-xs">Minimum Investment</p>
+              </div>
+            </div>
 
-              <div className="flex items-center justify-between text-gray-600 text-sm">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  <span>
-                    Sustainability Score:{" "}
-                    <span className="font-semibold text-black">
-                      {item.sustainability_score}/100
-                    </span>
+            <div className="flex items-center justify-between mt-2 mb-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Globe size={20} className="text-base" />
+                <span className="text-sm text-black">
+                  Sustainability Score{" "}
+                  <span className="font-semibold">
+                    {item.sustainability_score}/100
                   </span>
-                </div>
-                <p className="text-xs text-gray-500">{item.risk_level} Risk</p>
+                </span>
               </div>
             </div>
 
             <button
-              onClick={() => handleInvest(item)}
-              className="mt-6 w-full bg-base text-white py-3 rounded-2xl flex items-center justify-center gap-2 font-semibold text-base hover:opacity-90 transition"
+              className="mt-6 bg-base text-white py-3 rounded-lg flex items-center justify-center space-x-2"
+              onClick={() => handleInvest(item, index)}
             >
-              <Disc2 className="w-6 h-6 text-white" />
-              Invest
+              <Disc2 className="w-7 h-7 text-white" />
+              <span className="text-lg font-bold">Invest</span>
             </button>
           </div>
         ))}
