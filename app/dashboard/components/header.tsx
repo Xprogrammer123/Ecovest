@@ -18,7 +18,7 @@ const Header = ({ userName }: { userName: string }) => {
         </p>
       </div>
 
-      {/* Right: Profile section (desktop & mobile) */}
+     
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
@@ -32,7 +32,7 @@ const Header = ({ userName }: { userName: string }) => {
             className="object-cover rounded-full"
           />
 
-          {/* Name & text hidden on mobile */}
+        
           <div className="hidden sm:block text-left">
             <p className="text-[12px] sm:text-sm text-gray-500">Welcome back</p>
             <p className="text-md sm:text-black font-semibold text-black">
