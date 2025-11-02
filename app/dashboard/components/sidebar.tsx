@@ -47,7 +47,7 @@ const Sidebar = () => {
     },
   ];
 
-  // 🧩 Detect active route
+
   const isActiveRoute = (path: string) => pathname === path;
 
   if (!userId) return null; // Wait for userId to load
@@ -83,7 +83,7 @@ const Sidebar = () => {
         </nav>
       </aside>
 
-      {/* 📱 Mobile Bottom Navigation */}
+  
       <div
         className="fixed bottom-0 left-0 right-0 md:hidden flex justify-around items-center py-3 
         bg-base/10 backdrop-blur-lg border-t border-white/20 shadow-2xl rounded-full z-50 mb-4 w-[95%] ml-4"

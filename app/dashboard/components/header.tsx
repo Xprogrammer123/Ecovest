@@ -22,7 +22,7 @@ const Header = ({ userName }: { userName: string }) => {
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 sm:gap-3 bg-white py-1.5 pr-3 pl-1.5 sm:pr-4 sm:pl-4 rounded-full focus:outline-none shadow-sm hover:shadow transition-all duration-200"
+          className="flex items-center gap-2 sm:gap-3 bg-white py-1.5 pr-3 pl-1.5 sm:pr-4 sm:pl-2 rounded-full focus:outline-none shadow-sm hover:shadow transition-all duration-200"
         >
           <Image
             src="/dp.svg"
@@ -35,13 +35,13 @@ const Header = ({ userName }: { userName: string }) => {
           {/* Name & text hidden on mobile */}
           <div className="hidden sm:block text-left">
             <p className="text-[12px] sm:text-sm text-gray-500">Welcome back</p>
-            <p className="text-sm sm:text-base font-semibold text-black">
+            <p className="text-md sm:text-black font-semibold text-black">
               {userName}
             </p>
           </div>
 
           <ChevronDown
-            className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${
+            className={`w-5 h-5 text-gray-600 transition-transform duration-200 mr-2 ${
               open ? "rotate-180" : ""
             }`}
           />
