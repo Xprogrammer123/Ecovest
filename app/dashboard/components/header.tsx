@@ -41,7 +41,7 @@ const Header = ({ userName }: { userName: string }) => {
           </div>
 
           <ChevronDown
-            className={`w-5 h-5 text-gray-600 transition-transform duration-200 mr-2 ${
+            className={`lg:w-5 lg:h-5 w-8 h-8 text-gray-600 transition-transform duration-200 mr-2 ${
               open ? "rotate-180" : ""
             }`}
           />

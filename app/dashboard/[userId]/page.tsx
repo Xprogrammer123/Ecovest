@@ -171,10 +171,10 @@ const DashboardPage = () => {
         throw new Error(payload?.message || "Investment failed");
       }
 
-      await res.json(); // response body (if any)
-      // refresh dashboard to show new investment
+      await res.json();
+     
       await fetchDashboard();
-      // remove selection because user invested
+    
       localStorage.removeItem("selectedRecommendation");
       alert("Investment successful!");
     } catch (err: any) {
@@ -185,7 +185,7 @@ const DashboardPage = () => {
     }
   };
 
-  // ✨ Shimmer Loading
+
   if (loading) {
     return (
       <div className="animate-pulse space-y-6">
@@ -222,9 +222,9 @@ const DashboardPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Portfolio Value */}
-        <div className="portfolio text-white rounded-3xl relative overflow-hidden p-10">
+        <div className="portfolio text-white rounded-3xl relative overflow-hidden sm:p-10 p-5">
           <p className="text-2xl mb-3">Portfolio Value</p>
-          <h1 className="text-4xl md:text-5xl font-bold mt-1 mb-16">
+          <h1 className="text-[clamp(1.875rem, 3vw + 1rem, 3rem)] font-bold mt-1 mb-16">
             ₦{data?.demoBalance.toLocaleString() ?? "0"}
           </h1>
           <div className="flex items-center font-normal gap-3">
