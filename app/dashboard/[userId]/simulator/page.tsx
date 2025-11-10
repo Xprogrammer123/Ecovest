@@ -3,7 +3,7 @@
 export default function SimulatorPage() {
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Simulator pageeee</h1>
+      <h2 className="text-2xl font-bold mb-4">SIMULATOR PAGE</h2>
     </div>
   );
 }
