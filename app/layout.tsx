@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         {children}
    
-      <AssistantModal />
+     
       </body>
     </html>
   );
