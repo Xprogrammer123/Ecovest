@@ -25,7 +25,6 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Action states
   const [actionLoading, setActionLoading] = useState(false);
   const [simModalOpen, setSimModalOpen] = useState(false);
   const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);

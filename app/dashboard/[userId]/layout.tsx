@@ -1,7 +1,8 @@
 "use client";
+
+import React from "react";
 import { AssistantModal } from "../components/ai-components/assistant-ui/assistant-modal";
 import Sidebar from "../components/sidebar";
-import React from "react";
 
 export default function DashboardLayout({
   children,
@@ -14,8 +15,8 @@ export default function DashboardLayout({
 
       <main className="flex-1 p-4 md:p-6 overflow-y-auto md:ml-[22rem]">
         {children}
-
-     
+        {/* ✅ Modal can now safely use runtime context */}
+        <AssistantModal />
       </main>
     </div>
   );
