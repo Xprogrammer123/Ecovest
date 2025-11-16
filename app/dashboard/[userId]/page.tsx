@@ -30,6 +30,7 @@ const DashboardPage = () => {
   const [simModalOpen, setSimModalOpen] = useState(false);
   const [simResult, setSimResult] = useState<any>(null);
   const [simError, setSimError] = useState<string | null>(null);
+  const [simProgress, setSimProgress] = useState<number>(0);
 
   const handleLogout = async () => {
     try {
@@ -84,7 +85,6 @@ const DashboardPage = () => {
 
   useEffect(() => {
     fetchDashboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get selected recommendation from localStorage (set by Explore)
@@ -113,7 +113,20 @@ const DashboardPage = () => {
       setActionLoading(true);
       setSimError(null);
       setSimResult(null);
+      setSimProgress(0);
+      setSimModalOpen(true);
 
+      // Fake animated progress
+      const progressInterval = setInterval(() => {
+        setSimProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(progressInterval);
+          }
+          return Math.min(prev + Math.floor(Math.random() * 10 + 5), 100);
+        });
+      }, 300);
+
+      // Real API call
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`,
         {
@@ -130,12 +143,24 @@ const DashboardPage = () => {
       }
 
       const json = await res.json();
+
+      // Wait until progress reaches 100% for smooth animation
+      const waitForProgress = () =>
+        new Promise<void>((resolve) => {
+          const check = setInterval(() => {
+            if (simProgress >= 100) {
+              clearInterval(check);
+              resolve();
+            }
+          }, 100);
+        });
+
+      await waitForProgress();
+
       setSimResult(json);
-      setSimModalOpen(true);
     } catch (err: any) {
       console.error("Simulate error:", err);
       setSimError(err?.message || "Failed to simulate investment");
-      setSimModalOpen(true);
     } finally {
       setActionLoading(false);
     }
@@ -151,9 +176,7 @@ const DashboardPage = () => {
 
     const amount = recommendation.minimum_investment ?? 25000;
     const confirm = window.confirm(
-      `Confirm investment of ₦${amount.toLocaleString()} into "${
-        recommendation.name
-      }"?`
+      `Confirm investment of ₦${amount.toLocaleString()} into "${recommendation.name}"?`
     );
     if (!confirm) return;
 
@@ -172,9 +195,7 @@ const DashboardPage = () => {
       }
 
       await res.json();
-     
       await fetchDashboard();
-    
       localStorage.removeItem("selectedRecommendation");
       alert("Investment successful!");
     } catch (err: any) {
@@ -184,7 +205,6 @@ const DashboardPage = () => {
       setActionLoading(false);
     }
   };
-
 
   if (loading) {
     return (
@@ -200,7 +220,6 @@ const DashboardPage = () => {
     );
   }
 
-  // ❌ Error view
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center text-center mt-20">
@@ -215,16 +234,15 @@ const DashboardPage = () => {
     );
   }
 
-  // ✅ Main dashboard UI (keeps your exact layout & styles)
   return (
     <>
       <Header userName={data?.fullName ?? "User"} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
         {/* Portfolio Value */}
         <div className="portfolio text-white rounded-3xl relative overflow-hidden sm:p-10 p-5">
           <p className="text-2xl mb-3">Portfolio Value</p>
-          <h1 className="text-3xl md:text-4xl lg:5xl  font-bold mt-1 mb-16">
+          <h1 className="text-3xl md:text-4xl lg:5xl font-bold mt-1 mb-16">
             ₦{data?.demoBalance.toLocaleString() ?? "0"}
           </h1>
           <div className="flex items-center font-normal gap-3">
@@ -346,17 +364,33 @@ const DashboardPage = () => {
               setSimModalOpen(false);
               setSimResult(null);
               setSimError(null);
+              setSimProgress(0);
             }}
           ></div>
 
-          <div className="relative bg-white rounded-2xl p-6 w-[95%] max-w-xl shadow-xl z-60">
+          <div className="relative bg-white rounded-2xl p-6 w-[95%] max-w-xl shadow-xl z-60 animate-fade-in">
             <h3 className="text-lg font-semibold mb-3">Simulation Result</h3>
 
-            {simError ? (
-              <p className="text-red-500 mb-4">{simError}</p>
-            ) : simResult ? (
-              <div className="space-y-3">
-                {/* Render any useful keys returned by your simulate endpoint */}
+            {/* Animated progress */}
+            {!simResult && !simError && (
+              <div className="flex flex-col items-center space-y-4">
+                <p className="text-gray-700">
+                  Calculating projections...
+                </p>
+                <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                  <div
+                    className="bg-base h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${simProgress}%` }}
+                  ></div>
+                </div>
+                <span className="text-sm text-gray-500">{simProgress}%</span>
+              </div>
+            )}
+
+            {simError && <p className="text-red-500 mb-4">{simError}</p>}
+
+            {simResult && (
+              <div className="space-y-3 mt-2">
                 <p className="text-sm text-gray-700">
                   Projection:{" "}
                   <span className="font-semibold">
@@ -375,8 +409,6 @@ const DashboardPage = () => {
                   <p className="text-sm text-gray-700">{simResult.notes}</p>
                 )}
               </div>
-            ) : (
-              <p className="text-gray-700">No result to show.</p>
             )}
 
             <div className="mt-5 flex justify-end gap-3">
@@ -385,6 +417,7 @@ const DashboardPage = () => {
                   setSimModalOpen(false);
                   setSimResult(null);
                   setSimError(null);
+                  setSimProgress(0);
                 }}
                 className="px-4 py-2 rounded-lg border"
               >
@@ -394,7 +427,6 @@ const DashboardPage = () => {
               {simResult && (
                 <button
                   onClick={async () => {
-                    // quick invest from modal (uses same invest flow)
                     setActionLoading(true);
                     try {
                       const recommendation = getSelectedRecommendation();
