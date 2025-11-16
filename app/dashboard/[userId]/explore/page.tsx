@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, TrendingUp, Disc2 } from "lucide-react";
 import { investApi } from "@/lib/investApi";
-import InvestmentModal from "../../components/investmodal";
+import InvestmentModal from "../../components/investmentmodal";
 
 interface Recommendation {
   name: string;
   sector: string;
-  description: string; 
+  description: string;
   expected_return_percent: string;
   duration: string;
   risk_level: string;
