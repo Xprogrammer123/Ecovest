@@ -1,19 +1,17 @@
 "use client";
 
 import { BotIcon, ChevronDownIcon } from "lucide-react";
-import { type FC, forwardRef, useState, useEffect } from "react";
+import { type FC, forwardRef } from "react";
+import dynamic from "next/dynamic";
 import { AssistantModalPrimitive } from "@assistant-ui/react";
-
-import { Thread } from "@/app/dashboard/components/ai-components/assistant-ui/thread";
 import { TooltipIconButton } from "@/app/dashboard/components/ai-components/assistant-ui/tooltip-icon-button";
 
+const Thread = dynamic(
+  () => import("@/app/dashboard/components/ai-components/assistant-ui/thread").then(mod => mod.Thread),
+  { ssr: false }
+);
+
 export const AssistantModal: FC = () => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true); // only render Thread on client
-  }, []);
-
   return (
     <AssistantModalPrimitive.Root>
       <AssistantModalPrimitive.Anchor className="aui-root aui-modal-anchor fixed right-4 bottom-4 size-11">
@@ -29,7 +27,7 @@ export const AssistantModal: FC = () => {
                    data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-1/2 data-[state=open]:slide-in-from-right-1/2 data-[state=open]:zoom-in
                    [&>.aui-thread-root]:bg-inherit"
       >
-        {mounted && <Thread />}
+        <Thread />
       </AssistantModalPrimitive.Content>
     </AssistantModalPrimitive.Root>
   );
