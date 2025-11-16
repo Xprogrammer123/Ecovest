@@ -8,7 +8,7 @@ import InvestmentModal from "../../components/investmodal";
 interface Recommendation {
   name: string;
   sector: string;
-  description: string;
+  description: string; 
   expected_return_percent: string;
   duration: string;
   risk_level: string;
