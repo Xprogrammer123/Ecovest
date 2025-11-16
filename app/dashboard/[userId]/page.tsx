@@ -28,23 +28,13 @@ const DashboardPage = () => {
   // Action states
   const [actionLoading, setActionLoading] = useState(false);
   const [simModalOpen, setSimModalOpen] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
   const [simResult, setSimResult] = useState<any>(null);
   const [simError, setSimError] = useState<string | null>(null);
   const [simProgress, setSimProgress] = useState<number>(0);
 
-  const handleLogout = async () => {
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      localStorage.removeItem("user");
-      router.push("/auth/login");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
+  // --- Fetch Dashboard
   const fetchDashboard = async () => {
     try {
       setLoading(true);
@@ -66,11 +56,9 @@ const DashboardPage = () => {
       );
 
       if (!response.ok) {
-        if (response.status === 401) {
-          setError("Please log in to view your dashboard.");
-          return;
-        }
-        throw new Error("Failed to fetch dashboard data");
+        if (response.status === 401) setError("Please log in to view your dashboard.");
+        else throw new Error("Failed to fetch dashboard data");
+        return;
       }
 
       const result: DashboardData = await response.json();
@@ -87,96 +75,100 @@ const DashboardPage = () => {
     fetchDashboard();
   }, []);
 
-  // Get selected recommendation from localStorage (set by Explore)
-  const getSelectedRecommendation = (): any | null => {
+  const handleLogout = async () => {
     try {
-      const raw = localStorage.getItem("selectedRecommendation");
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch {
-      return null;
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      localStorage.removeItem("user");
+      router.push("/auth/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
     }
   };
 
-  // --- Simulate handler: POST /api/invest/simulate
-  const handleSimulate = async () => {
-    const recommendation = getSelectedRecommendation();
-    if (!recommendation) {
-      setSimError("No recommendation selected. Pick one from Explore first.");
-      setSimModalOpen(true);
-      return;
-    }
-
-    const amount = recommendation.minimum_investment ?? 25000;
+  // --- Open Simulate Modal and fetch AI recommendations
+  const openSimModal = async () => {
+    setSimModalOpen(true);
+    setSelectedRecommendation(null);
+    setSimResult(null);
+    setSimError(null);
+    setSimProgress(0);
+    setActionLoading(true);
 
     try {
-      setActionLoading(true);
-      setSimError(null);
-      setSimResult(null);
-      setSimProgress(0);
-      setSimModalOpen(true);
+      const userId = localStorage.getItem("user")?.replace(/"/g, "");
+      if (!userId) throw new Error("User not logged in");
 
-      // Fake animated progress
-      const progressInterval = setInterval(() => {
-        setSimProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-          }
-          return Math.min(prev + Math.floor(Math.random() * 10 + 5), 100);
-        });
-      }, 300);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      // Real API call
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recommendation, amount }),
-        }
-      );
+      if (!res.ok) throw new Error("Failed to fetch recommendations");
 
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload?.message || "Simulation failed");
-      }
-
-      const json = await res.json();
-
-      // Wait until progress reaches 100% for smooth animation
-      const waitForProgress = () =>
-        new Promise<void>((resolve) => {
-          const check = setInterval(() => {
-            if (simProgress >= 100) {
-              clearInterval(check);
-              resolve();
-            }
-          }, 100);
-        });
-
-      await waitForProgress();
-
-      setSimResult(json);
+      const data = await res.json();
+      setAiRecommendations(data.aiPortfolio ?? []);
     } catch (err: any) {
-      console.error("Simulate error:", err);
-      setSimError(err?.message || "Failed to simulate investment");
+      console.error("AI generate error:", err);
+      setSimError(err?.message || "Failed to generate recommendations");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // --- Invest handler: POST /api/invest
-  const handleInvest = async () => {
-    const recommendation = getSelectedRecommendation();
-    if (!recommendation) {
-      alert("No recommendation selected. Pick one from Explore first.");
-      return;
-    }
+  // --- Simulate selected recommendation
+  const handleSimulateRecommendation = async (recommendation: any) => {
+    setSelectedRecommendation(recommendation);
+    setSimResult(null);
+    setSimError(null);
+    setSimProgress(0);
+    setActionLoading(true);
 
-    const amount = recommendation.minimum_investment ?? 25000;
+    const progressInterval = setInterval(() => {
+      setSimProgress((prev) => {
+        if (prev >= 100) clearInterval(progressInterval);
+        return Math.min(prev + Math.floor(Math.random() * 10 + 5), 100);
+      });
+    }, 300);
+
+    try {
+      const amount = recommendation.minimum_investment ?? 25000;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recommendation, amount }),
+      });
+      if (!res.ok) throw new Error("Simulation failed");
+      const json = await res.json();
+
+      await new Promise<void>((resolve) => {
+        const check = setInterval(() => {
+          if (simProgress >= 100) {
+            clearInterval(check);
+            resolve();
+          }
+        }, 100);
+      });
+
+      setSimResult(json);
+    } catch (err: any) {
+      console.error(err);
+      setSimError(err?.message || "Simulation failed");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // --- Invest handler
+  const handleInvest = async () => {
+    if (!selectedRecommendation) return;
+    const amount = selectedRecommendation.minimum_investment ?? 25000;
     const confirm = window.confirm(
-      `Confirm investment of ₦${amount.toLocaleString()} into "${recommendation.name}"?`
+      `Confirm investment of ₦${amount.toLocaleString()} into "${selectedRecommendation.name}"?`
     );
     if (!confirm) return;
 
@@ -186,7 +178,7 @@ const DashboardPage = () => {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recommendation, amount }),
+        body: JSON.stringify({ recommendation: selectedRecommendation, amount }),
       });
 
       if (!res.ok) {
@@ -194,9 +186,11 @@ const DashboardPage = () => {
         throw new Error(payload?.message || "Investment failed");
       }
 
-      await res.json();
       await fetchDashboard();
       localStorage.removeItem("selectedRecommendation");
+      setSimModalOpen(false);
+      setSelectedRecommendation(null);
+      setSimResult(null);
       alert("Investment successful!");
     } catch (err: any) {
       console.error("Invest error:", err);
@@ -309,17 +303,17 @@ const DashboardPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 pt-5">
             <button
               className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2"
-              onClick={handleSimulate}
+              onClick={openSimModal}
               disabled={actionLoading}
             >
               <Zap className="w-6 h-6" />
-              <span>{actionLoading ? "Simulating..." : "Simulate"}</span>
+              <span>{actionLoading ? "Loading..." : "Simulate"}</span>
             </button>
 
             <button
               className="bg-base text-white py-3 px-4 rounded-xl font-medium flex-1 flex items-center justify-center space-x-2"
               onClick={handleInvest}
-              disabled={actionLoading}
+              disabled={actionLoading || !selectedRecommendation}
             >
               <Disc2 className="w-6 h-6" />
               <span>{actionLoading ? "Processing..." : "Invest"}</span>
@@ -340,13 +334,9 @@ const DashboardPage = () => {
               <p className="font-semibold text-gray-800 mb-1">Your Impact</p>
               <p className="text-sm text-gray-600">
                 Your portfolio has{" "}
-                <b className="text-base">
-                  {data?.investments?.length ?? 0} active investments
-                </b>
+                <b className="text-base">{data?.investments?.length ?? 0} active investments</b>
                 {data?.investmentGoal === "sdg" && " contributing to SDG goals"}
-                {data?.investmentGoal === "both" &&
-                  " balancing profit and impact"}
-                .
+                {data?.investmentGoal === "both" && " balancing profit and impact"}.
               </p>
             </div>
           </div>
@@ -362,6 +352,7 @@ const DashboardPage = () => {
             className="absolute inset-0 bg-black/40"
             onClick={() => {
               setSimModalOpen(false);
+              setSelectedRecommendation(null);
               setSimResult(null);
               setSimError(null);
               setSimProgress(0);
@@ -369,102 +360,79 @@ const DashboardPage = () => {
           ></div>
 
           <div className="relative bg-white rounded-2xl p-6 w-[95%] max-w-xl shadow-xl z-60 animate-fade-in">
-            <h3 className="text-lg font-semibold mb-3">Simulation Result</h3>
+            <h3 className="text-lg font-semibold mb-3">Simulate Investment</h3>
 
-            {/* Animated progress */}
-            {!simResult && !simError && (
-              <div className="flex flex-col items-center space-y-4">
-                <p className="text-gray-700">
-                  Calculating projections...
-                </p>
-                <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-                  <div
-                    className="bg-base h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${simProgress}%` }}
-                  ></div>
+            {!selectedRecommendation ? (
+              <div className="grid gap-4">
+                {simError && <p className="text-red-500 mb-2">{simError}</p>}
+                {aiRecommendations.slice(0, 4).map((rec, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-4 border rounded-lg">
+                    <div>
+                      <p className="font-semibold">{rec.name}</p>
+                      <p className="text-sm text-gray-500">
+                        Min Investment: ₦{rec.minimum_investment?.toLocaleString() ?? "0"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleSimulateRecommendation(rec)}
+                      className="px-3 py-2 bg-base text-white rounded-lg"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? "Simulating..." : "Simulate Investment"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div>
+                {/* Animated progress */}
+                {!simResult && !simError && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <p className="text-gray-700">Calculating projections...</p>
+                    <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                      <div
+                        className="bg-base h-3 rounded-full transition-all duration-500"
+                        style={{ width: `${simProgress}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-gray-500">{simProgress}%</span>
+                  </div>
+                )}
+
+                {simError && <p className="text-red-500 mb-4">{simError}</p>}
+
+                {simResult && (
+                  <div className="space-y-3 mt-2">
+                    <p className="text-sm text-gray-700">
+                      Projection: <span className="font-semibold">{simResult.projection}</span>
+                    </p>
+                    {simResult.annualizedReturn && (
+                      <p className="text-sm text-gray-700">
+                        Annualized return: <span className="font-semibold">{simResult.annualizedReturn}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-5 flex justify-end gap-3">
+                  <button
+                    onClick={() => setSelectedRecommendation(null)}
+                    className="px-4 py-2 rounded-lg border"
+                  >
+                    Back
+                  </button>
+                  {simResult && (
+                    <button
+                      onClick={handleInvest}
+                      className="px-4 py-2 bg-base text-white rounded-lg"
+                      disabled={actionLoading}
+                    >
+                      Invest
+                    </button>
+                  )}
                 </div>
-                <span className="text-sm text-gray-500">{simProgress}%</span>
               </div>
             )}
-
-            {simError && <p className="text-red-500 mb-4">{simError}</p>}
-
-            {simResult && (
-              <div className="space-y-3 mt-2">
-                <p className="text-sm text-gray-700">
-                  Projection:{" "}
-                  <span className="font-semibold">
-                    {simResult.projection ?? JSON.stringify(simResult)}
-                  </span>
-                </p>
-                {simResult.annualizedReturn && (
-                  <p className="text-sm text-gray-700">
-                    Annualized return:{" "}
-                    <span className="font-semibold">
-                      {simResult.annualizedReturn}
-                    </span>
-                  </p>
-                )}
-                {simResult.notes && (
-                  <p className="text-sm text-gray-700">{simResult.notes}</p>
-                )}
-              </div>
-            )}
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setSimModalOpen(false);
-                  setSimResult(null);
-                  setSimError(null);
-                  setSimProgress(0);
-                }}
-                className="px-4 py-2 rounded-lg border"
-              >
-                Close
-              </button>
-
-              {simResult && (
-                <button
-                  onClick={async () => {
-                    setActionLoading(true);
-                    try {
-                      const recommendation = getSelectedRecommendation();
-                      const amount =
-                        recommendation?.minimum_investment ?? 25000;
-                      const res = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL}/api/invest`,
-                        {
-                          method: "POST",
-                          credentials: "include",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ recommendation, amount }),
-                        }
-                      );
-                      if (!res.ok) {
-                        const payload = await res.json().catch(() => ({}));
-                        throw new Error(
-                          payload?.message || "Investment failed"
-                        );
-                      }
-                      await fetchDashboard();
-                      localStorage.removeItem("selectedRecommendation");
-                      setSimModalOpen(false);
-                      setSimResult(null);
-                      alert("Investment successful!");
-                    } catch (err: any) {
-                      console.error(err);
-                      alert(err?.message || "Investment failed");
-                    } finally {
-                      setActionLoading(false);
-                    }
-                  }}
-                  className="px-4 py-2 bg-base text-white rounded-lg"
-                >
-                  Invest
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}
