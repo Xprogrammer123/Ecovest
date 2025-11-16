@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, TrendingUp, Disc2 } from "lucide-react";
 import InvestmentModal from "@/app/dashboard/components/investmentmodal";
-import { investApi } from "@/lib/investApi";
 
 interface Recommendation {
   name: string;
@@ -100,7 +99,9 @@ const Explore = () => {
                 <span>{item.expected_return_percent}% (annum)</span>
               </div>
               <div className="text-right">
-                <p className="text-base font-semibold text-gray-900">₦{item.minimum_investment.toLocaleString()}</p>
+                <p className="text-base font-semibold text-gray-900">
+                  ₦{item.minimum_investment.toLocaleString()}
+                </p>
                 <p className="text-gray-500 text-xs">Min. Investment</p>
               </div>
             </div>
@@ -108,7 +109,8 @@ const Explore = () => {
             <div className="flex items-center gap-2 text-gray-700 mb-4">
               <Globe size={18} className="text-green-600" />
               <span className="text-sm">
-                Sustainability Score <span className="font-semibold">{item.sustainability_score}/100</span>
+                Sustainability Score{" "}
+                <span className="font-semibold">{item.sustainability_score}/100</span>
               </span>
             </div>
 

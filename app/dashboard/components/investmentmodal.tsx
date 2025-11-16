@@ -21,7 +21,13 @@ interface Props {
   onSuccess?: () => void;
 }
 
-const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, index, onSuccess }) => {
+const InvestmentModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  recommendation,
+  index,
+  onSuccess,
+}) => {
   const [amount, setAmount] = useState(recommendation.minimum_investment);
   const [loading, setLoading] = useState(false);
 
@@ -35,31 +41,35 @@ const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, ind
 
     setLoading(true);
     try {
-      const res = await fetch("/api/invest", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // sends cookies like `-b cookies.txt`
         body: JSON.stringify({
           recommendationIndex: index,
-          recommendation,
           amount,
         }),
       });
 
-      const data = await res.json();
+      // Safely parse JSON (handles empty responses)
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
 
-      if (!res.ok) throw new Error(data.message || "Investment failed");
-
-      // Update local balance if backend returns it
-      if (data.newBalance) {
-        localStorage.setItem("userBalance", data.newBalance);
+      if (!res.ok) {
+        const message = data?.message || `Investment failed (${res.status})`;
+        throw new Error(message);
       }
 
       alert("Investment successful!");
       onSuccess?.();
       onClose();
     } catch (error: any) {
-      console.error(error);
-      alert(error.message || "Failed to invest. Please try again.");
+      console.error("Investment error:", error);
+      alert(error.message || "Investment failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -84,10 +94,7 @@ const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, ind
           <p><span className="font-semibold">Duration:</span> {recommendation.duration}</p>
           <p><span className="font-semibold">Risk Level:</span> {recommendation.risk_level}</p>
           <p><span className="font-semibold">Sustainability:</span> {recommendation.sustainability_score}/100</p>
-          <p>
-            <span className="font-semibold">Minimum Investment:</span>{" "}
-            ₦{recommendation.minimum_investment.toLocaleString()}
-          </p>
+          <p><span className="font-semibold">Minimum Investment:</span> ₦{recommendation.minimum_investment.toLocaleString()}</p>
         </div>
 
         <input
