@@ -17,16 +17,17 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   recommendation: Recommendation;
-  onInvest?: (amount: number) => void;
+  index: number;
+  onSuccess?: () => void;
 }
 
-const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, onInvest }) => {
+const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, index, onSuccess }) => {
   const [amount, setAmount] = useState(recommendation.minimum_investment);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleInvestClick = async () => {
+  const handleInvest = async () => {
     if (amount < recommendation.minimum_investment) {
       alert(`Minimum investment is ₦${recommendation.minimum_investment.toLocaleString()}`);
       return;
@@ -34,11 +35,31 @@ const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, onI
 
     setLoading(true);
     try {
-      await onInvest?.(amount);
+      const res = await fetch("/api/invest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recommendationIndex: index,
+          recommendation,
+          amount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Investment failed");
+
+      // Update local balance if backend returns it
+      if (data.newBalance) {
+        localStorage.setItem("userBalance", data.newBalance);
+      }
+
+      alert("Investment successful!");
+      onSuccess?.();
       onClose();
-    } catch (err) {
-      console.error(err);
-      alert("Investment failed. Please try again.");
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || "Failed to invest. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -54,21 +75,20 @@ const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, onI
           ×
         </button>
 
-        <h2 className="text-lg font-semibold mb-2">{recommendation.name}</h2>
-        <p className="text-gray-500 text-sm mb-2">{recommendation.sector}</p>
-        <p className="text-black text-sm mb-4">{recommendation.description}</p>
+        <h2 className="text-xl font-semibold mb-1">{recommendation.name}</h2>
+        <p className="text-gray-500 text-sm mb-3">{recommendation.sector}</p>
+        <p className="text-gray-700 text-sm mb-4">{recommendation.description}</p>
 
-        <div className="flex justify-between mb-4 text-sm">
-          <span>Expected Return: {recommendation.expected_return_percent}%</span>
-          <span>Duration: {recommendation.duration}</span>
+        <div className="text-sm space-y-1 mb-4">
+          <p><span className="font-semibold">Expected Return:</span> {recommendation.expected_return_percent}%</p>
+          <p><span className="font-semibold">Duration:</span> {recommendation.duration}</p>
+          <p><span className="font-semibold">Risk Level:</span> {recommendation.risk_level}</p>
+          <p><span className="font-semibold">Sustainability:</span> {recommendation.sustainability_score}/100</p>
+          <p>
+            <span className="font-semibold">Minimum Investment:</span>{" "}
+            ₦{recommendation.minimum_investment.toLocaleString()}
+          </p>
         </div>
-        <div className="flex justify-between mb-4 text-sm">
-          <span>Risk Level: {recommendation.risk_level}</span>
-          <span>Sustainability: {recommendation.sustainability_score}/100</span>
-        </div>
-        <p className="text-sm mb-4">
-          Minimum Investment: ₦{recommendation.minimum_investment.toLocaleString()}
-        </p>
 
         <input
           type="number"
@@ -79,7 +99,7 @@ const InvestmentModal: React.FC<Props> = ({ isOpen, onClose, recommendation, onI
         />
 
         <button
-          onClick={handleInvestClick}
+          onClick={handleInvest}
           disabled={loading}
           className="w-full bg-base text-white py-3 rounded-lg hover:opacity-90 transition"
         >

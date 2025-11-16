@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, TrendingUp, Disc2 } from "lucide-react";
+import InvestmentModal from "@/app/dashboard/components/investmentmodal";
 import { investApi } from "@/lib/investApi";
-import InvestmentModal from "../../components/investmentmodal";
 
 interface Recommendation {
   name: string;
@@ -21,7 +21,7 @@ const Explore = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedRecommendation, setSelectedRecommendation] = useState<Recommendation | null>(null);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<{ data: Recommendation; index: number } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,30 +46,6 @@ const Explore = () => {
     };
     fetchRecommendations();
   }, []);
-
-  const handleInvest = async (item: Recommendation, amount: number) => {
-    try {
-      const userData = localStorage.getItem("user");
-      const userId = userData ? JSON.parse(userData)?.id : null;
-
-      if (!userId) {
-        alert("User ID not found. Please log in again.");
-        router.push("/auth/login");
-        return;
-      }
-
-      // Call API simulate + create
-      await investApi.simulate(item, amount);
-      await investApi.create(item, amount);
-
-      localStorage.setItem("selectedRecommendation", JSON.stringify(item));
-
-      router.push(`/dashboard/${userId}`);
-    } catch (err) {
-      console.error("Investment error:", err);
-      alert("Failed to create investment. Please try again.");
-    }
-  };
 
   if (loading) {
     return (
@@ -108,7 +84,10 @@ const Explore = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {recommendations.map((item, index) => (
-          <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+          <div
+            key={index}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+          >
             <p className="text-lg font-semibold text-black mb-1">{item.name}</p>
             <p className="text-gray-500 text-sm mb-2 font-semibold">{item.sector}</p>
             <p className="text-black text-sm mb-3 line-clamp-2">{item.description}</p>
@@ -121,9 +100,7 @@ const Explore = () => {
                 <span>{item.expected_return_percent}% (annum)</span>
               </div>
               <div className="text-right">
-                <p className="text-base font-semibold text-gray-900">
-                  ₦{item.minimum_investment.toLocaleString()}
-                </p>
+                <p className="text-base font-semibold text-gray-900">₦{item.minimum_investment.toLocaleString()}</p>
                 <p className="text-gray-500 text-xs">Min. Investment</p>
               </div>
             </div>
@@ -137,7 +114,7 @@ const Explore = () => {
 
             <button
               className="w-full bg-base text-white py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition"
-              onClick={() => setSelectedRecommendation(item)}
+              onClick={() => setSelectedRecommendation({ data: item, index })}
             >
               <Disc2 className="w-6 h-6 text-white" />
               <span className="font-semibold text-lg">Invest</span>
@@ -149,9 +126,10 @@ const Explore = () => {
       {selectedRecommendation && (
         <InvestmentModal
           isOpen={!!selectedRecommendation}
-          recommendation={selectedRecommendation}
+          recommendation={selectedRecommendation.data}
+          index={selectedRecommendation.index}
           onClose={() => setSelectedRecommendation(null)}
-          onInvest={(amount) => handleInvest(selectedRecommendation, amount)}
+          onSuccess={() => router.refresh()}
         />
       )}
     </div>
