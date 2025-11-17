@@ -19,100 +19,106 @@ interface ChartData {
 
 interface LineCharttProps {
   investments: Investment[];
-  userCreatedAt?: string; // 👈 optional, to know when to start
+  demoBalance?: number;
+  invested?: number;
 }
 
-const LineChartt: React.FC<LineCharttProps> = ({ investments, userCreatedAt }) => {
+const LineChartt: React.FC<LineCharttProps> = ({
+  investments,
+  demoBalance = 0,
+  invested = 0,
+}) => {
   const chartData = useMemo(() => {
-    if (!investments.length) return [];
-
-    // 🧠 Start tracking from user creation date (or oldest investment)
-    const startDate = userCreatedAt
-      ? new Date(userCreatedAt)
-      : new Date(
-          Math.min(...investments.map((inv) => new Date(inv.createdAt).getTime()))
-        );
+    if (!demoBalance || demoBalance === 0) return [];
 
     const now = new Date();
+    const year = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0 = Jan
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // Calculate monthly growth based on demoBalance & invested
+    const totalMonths = currentMonth + 1; // from January → current month
+    const growth = demoBalance - invested;
+    const monthlyIncrease = totalMonths > 0 ? growth / totalMonths : 0;
+
     const data: ChartData[] = [];
+    let currentValue = invested;
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    const currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // 📅 Loop monthly
-    while (currentMonth <= endMonth) {
-      const totalValue = investments.reduce((sum, inv) => {
-        const invDate = new Date(inv.createdAt);
-        if (invDate <= currentMonth) {
-          const monthsPassed =
-            (currentMonth.getFullYear() - invDate.getFullYear()) * 12 +
-            (currentMonth.getMonth() - invDate.getMonth());
-          const monthlyRate = inv.expectedReturn / 100 / 12;
-          const projected =
-            inv.amount * Math.pow(1 + monthlyRate, Math.max(monthsPassed, 0));
-          return sum + projected;
-        }
-        return sum;
-      }, 0);
-
+    for (let i = 0; i < 12; i++) {
+      if (i <= currentMonth) {
+        currentValue += monthlyIncrease;
+      }
       data.push({
-        month: `${monthNames[currentMonth.getMonth()]}`,
-        value: Math.round(totalValue / 1000), // Display in ₦ thousands
+        month: `${monthNames[i]} ${year}`,
+        value: Math.max(Math.round(currentValue / 1000), 0),
       });
-
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
 
     return data;
-  }, [investments, userCreatedAt]);
+  }, [demoBalance, invested]);
 
-  if (!investments.length) {
+  if (!demoBalance || demoBalance === 0) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm text-center">
-        <p className="text-gray-500">No investment data available</p>
+        <p className="text-gray-500">No portfolio data available</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
-      <p className="text-2xl font-semibold mb-4">Monthly Performance</p>
+      <p className="text-2xl font-semibold mb-4">Portfolio Performance</p>
 
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
-            <CartesianGrid stroke="#eaeaea" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="month"
-              axisLine={{ stroke: "#000", strokeWidth: 1 }}
               tickLine={false}
-              tick={{ fill: "#111", fontSize: 14 }}
-              interval="preserveStartEnd"
+              axisLine={false}
+              tick={{ fill: "#111", fontSize: 13 }}
             />
             <YAxis
-              axisLine={false}
               tickLine={false}
-              tick={{ fill: "#111", fontSize: 14 }}
-              tickFormatter={(value) => `${value}k`}
+              axisLine={false}
+              tick={{ fill: "#111", fontSize: 13 }}
+              tickFormatter={(v) => `₦${v}k`}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: "#333",
-                borderRadius: "6px",
                 color: "#fff",
+                borderRadius: "8px",
                 border: "none",
               }}
-              formatter={(value: number) => [`₦${value.toLocaleString()}k`, "Portfolio Value"]}
+              formatter={(v: number) => [`₦${v.toLocaleString()}k`, "Portfolio"]}
             />
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#3E563B" // smooth green line
+              stroke="#3E563B"
               strokeWidth={2.5}
               dot={false}
-              activeDot={{ r: 6, fill: "#3E563B", stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{
+                r: 6,
+                fill: "#3E563B",
+                stroke: "#fff",
+                strokeWidth: 2,
+              }}
               animationDuration={1200}
             />
           </LineChart>
@@ -120,9 +126,9 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments, userCreatedAt }) =
       </div>
 
       <div className="text-center text-sm text-gray-500 mt-3">
-        {`Tracking from ${
-          chartData[0]?.month || "N/A"
-        } to ${chartData[chartData.length - 1]?.month || "N/A"}`}
+        {`Tracking portfolio from Jan ${new Date().getFullYear()} to ${
+          chartData[chartData.length - 1]?.month || "N/A"
+        }`}
       </div>
     </div>
   );

@@ -28,7 +28,8 @@ const DashboardPage = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [simModalOpen, setSimModalOpen] = useState(false);
   const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
-  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
+  const [selectedRecommendation, setSelectedRecommendation] =
+    useState<any>(null);
   const [simResult, setSimResult] = useState<any>(null);
   const [simError, setSimError] = useState<string | null>(null);
   const [simProgress, setSimProgress] = useState<number>(0);
@@ -55,7 +56,8 @@ const DashboardPage = () => {
       );
 
       if (!response.ok) {
-        if (response.status === 401) setError("Please log in to view your dashboard.");
+        if (response.status === 401)
+          setError("Please log in to view your dashboard.");
         else throw new Error("Failed to fetch dashboard data");
         return;
       }
@@ -100,11 +102,14 @@ const DashboardPage = () => {
       const userId = localStorage.getItem("user")?.replace(/"/g, "");
       if (!userId) throw new Error("User not logged in");
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/ai/generate`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to fetch recommendations");
 
@@ -135,12 +140,15 @@ const DashboardPage = () => {
 
     try {
       const amount = recommendation.minimum_investment ?? 25000;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recommendation, amount }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invest/simulate`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recommendation, amount }),
+        }
+      );
       if (!res.ok) throw new Error("Simulation failed");
       const json = await res.json();
 
@@ -167,7 +175,9 @@ const DashboardPage = () => {
     if (!selectedRecommendation) return;
     const amount = selectedRecommendation.minimum_investment ?? 25000;
     const confirm = window.confirm(
-      `Confirm investment of ₦${amount.toLocaleString()} into "${selectedRecommendation.name}"?`
+      `Confirm investment of ₦${amount.toLocaleString()} into "${
+        selectedRecommendation.name
+      }"?`
     );
     if (!confirm) return;
 
@@ -177,7 +187,10 @@ const DashboardPage = () => {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recommendation: selectedRecommendation, amount }),
+        body: JSON.stringify({
+          recommendation: selectedRecommendation,
+          amount,
+        }),
       });
 
       if (!res.ok) {
@@ -322,7 +335,12 @@ const DashboardPage = () => {
       </div>
 
       <div className="mt-6 space-y-5">
-        <LineChartt investments={data?.investments ?? []} />
+        <LineChartt
+          investments={data?.investments ?? []}
+          demoBalance={data?.demoBalance}
+          invested={data?.invested}
+          userCreatedAt={data?.createdAt}
+        />
 
         <div className="bg-white p-5 rounded-2xl shadow-sm">
           <div className="flex items-start gap-4">
@@ -333,9 +351,13 @@ const DashboardPage = () => {
               <p className="font-semibold text-gray-800 mb-1">Your Impact</p>
               <p className="text-sm text-gray-600">
                 Your portfolio has{" "}
-                <b className="text-base">{data?.investments?.length ?? 0} active investments</b>
+                <b className="text-base">
+                  {data?.investments?.length ?? 0} active investments
+                </b>
                 {data?.investmentGoal === "sdg" && " contributing to SDG goals"}
-                {data?.investmentGoal === "both" && " balancing profit and impact"}.
+                {data?.investmentGoal === "both" &&
+                  " balancing profit and impact"}
+                .
               </p>
             </div>
           </div>
@@ -365,11 +387,15 @@ const DashboardPage = () => {
               <div className="grid gap-4">
                 {simError && <p className="text-red-500 mb-2">{simError}</p>}
                 {aiRecommendations.slice(0, 4).map((rec, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-4 border rounded-lg">
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center p-4 border rounded-lg"
+                  >
                     <div>
                       <p className="font-semibold">{rec.name}</p>
                       <p className="text-sm text-gray-500">
-                        Min Investment: ₦{rec.minimum_investment?.toLocaleString() ?? "0"}
+                        Min Investment: ₦
+                        {rec.minimum_investment?.toLocaleString() ?? "0"}
                       </p>
                     </div>
                     <button
@@ -394,7 +420,9 @@ const DashboardPage = () => {
                         style={{ width: `${simProgress}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-500">{simProgress}%</span>
+                    <span className="text-sm text-gray-500">
+                      {simProgress}%
+                    </span>
                   </div>
                 )}
 
@@ -403,11 +431,17 @@ const DashboardPage = () => {
                 {simResult && (
                   <div className="space-y-3 mt-2">
                     <p className="text-sm text-gray-700">
-                      Projection: <span className="font-semibold">{simResult.projection}</span>
+                      Projection:{" "}
+                      <span className="font-semibold">
+                        {simResult.projection}
+                      </span>
                     </p>
                     {simResult.annualizedReturn && (
                       <p className="text-sm text-gray-700">
-                        Annualized return: <span className="font-semibold">{simResult.annualizedReturn}</span>
+                        Annualized return:{" "}
+                        <span className="font-semibold">
+                          {simResult.annualizedReturn}
+                        </span>
                       </p>
                     )}
                   </div>
