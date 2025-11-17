@@ -7,7 +7,7 @@ import { AssistantModalPrimitive } from "@assistant-ui/react";
 import dynamic from "next/dynamic";
 import { TooltipIconButton } from "@/app/dashboard/components/ai-components/assistant-ui/tooltip-icon-button";
 
-// Dynamically import Thread for client-only
+
 const Thread = dynamic(
   () => import("./thread").then((mod) => mod.Thread),
   { ssr: false }
