@@ -1,9 +1,7 @@
-"use client";
-
 import React from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AssistantRuntimeProvider, useAssistantRuntime } from "@assistant-ui/react"; // ✅ correct import
+
 
 // ✅ Load fonts
 const geistSans = Geist({
@@ -15,9 +13,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-// ✅ use runtime instance once globally
-const runtime = useAssistantRuntime();
 
 export default function RootLayout({
   children,
@@ -39,10 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f8f9f8]`}
       >
-
-        <AssistantRuntimeProvider runtime={runtime}>
           {children}
-        </AssistantRuntimeProvider>
       </body>
     </html>
   );
