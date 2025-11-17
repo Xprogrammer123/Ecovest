@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useMemo } from "react";
 import {
   LineChart,
@@ -12,63 +13,60 @@ import {
 import { Investment } from "@/app/types/investment";
 
 interface ChartData {
-  date: string;
+  month: string;
   value: number;
 }
 
 interface LineCharttProps {
   investments: Investment[];
+  userCreatedAt?: string; // 👈 optional, to know when to start
 }
 
-const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
-  // ✅ Transform investment data into daily performance
+const LineChartt: React.FC<LineCharttProps> = ({ investments, userCreatedAt }) => {
   const chartData = useMemo(() => {
     if (!investments.length) return [];
 
-    // Sort investments by creation date
-    const sorted = [...investments].sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    // 🧠 Start tracking from user creation date (or oldest investment)
+    const startDate = userCreatedAt
+      ? new Date(userCreatedAt)
+      : new Date(
+          Math.min(...investments.map((inv) => new Date(inv.createdAt).getTime()))
+        );
 
-    const oldestDate = new Date(sorted[0].createdAt);
-    const currentDate = new Date();
+    const now = new Date();
+    const data: ChartData[] = [];
 
-    // Generate all days from first investment to now
-    const days: ChartData[] = [];
-    let currentDay = new Date(oldestDate);
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    while (currentDay <= currentDate) {
-      const dailyValue = investments.reduce((total, investment) => {
-        const invDate = new Date(investment.createdAt);
-        if (invDate <= currentDay) {
-          // Calculate days since investment
-          const diffDays = Math.floor(
-            (currentDay.getTime() - invDate.getTime()) / (1000 * 60 * 60 * 24)
-          );
+    const currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-          // Approximate daily growth (based on expected annual return)
-          const dailyRate = investment.expectedReturn / 100 / 365;
-          const projectedValue =
-            investment.amount * Math.pow(1 + dailyRate, diffDays);
-
-          return total + projectedValue;
+    // 📅 Loop monthly
+    while (currentMonth <= endMonth) {
+      const totalValue = investments.reduce((sum, inv) => {
+        const invDate = new Date(inv.createdAt);
+        if (invDate <= currentMonth) {
+          const monthsPassed =
+            (currentMonth.getFullYear() - invDate.getFullYear()) * 12 +
+            (currentMonth.getMonth() - invDate.getMonth());
+          const monthlyRate = inv.expectedReturn / 100 / 12;
+          const projected =
+            inv.amount * Math.pow(1 + monthlyRate, Math.max(monthsPassed, 0));
+          return sum + projected;
         }
-        return total;
+        return sum;
       }, 0);
 
-      days.push({
-        date: currentDay.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
-        value: Math.round(dailyValue),
+      data.push({
+        month: `${monthNames[currentMonth.getMonth()]}`,
+        value: Math.round(totalValue / 1000), // Display in ₦ thousands
       });
 
-      currentDay.setDate(currentDay.getDate() + 1);
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
 
-    return days;
-  }, [investments]);
+    return data;
+  }, [investments, userCreatedAt]);
 
   if (!investments.length) {
     return (
@@ -79,77 +77,52 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
   }
 
   return (
-    <div className="bg-white backdrop-blur border border-white/20 p-6 rounded-2xl shadow-sm">
-      <p className="text-2xl font-semibold mb-4">Daily Portfolio Performance</p>
+    <div className="bg-white p-6 rounded-2xl shadow-sm">
+      <p className="text-2xl font-semibold mb-4">Monthly Performance</p>
 
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={chartData}
-            margin={{ top: 10, right: 30, left: -10, bottom: 0 }}
-          >
-            <defs>
-              <linearGradient id="lineColor" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#597d4a" stopOpacity={1} />
-                <stop offset="100%" stopColor="#597d4a" stopOpacity={0.6} />
-              </linearGradient>
-            </defs>
-
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
-
+          <LineChart data={chartData}>
+            <CartesianGrid stroke="#eaeaea" vertical={false} />
             <XAxis
-              dataKey="date"
-              axisLine={false}
+              dataKey="month"
+              axisLine={{ stroke: "#000", strokeWidth: 1 }}
               tickLine={false}
-              tick={{ fill: "#2e2e2e", fontSize: 12 }}
+              tick={{ fill: "#111", fontSize: 14 }}
               interval="preserveStartEnd"
             />
-
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#2e2e2e", fontSize: 12 }}
-              tickFormatter={(value) => `₦${value.toLocaleString()}`}
+              tick={{ fill: "#111", fontSize: 14 }}
+              tickFormatter={(value) => `${value}k`}
             />
-
             <Tooltip
               contentStyle={{
-                backgroundColor: "#597d4a",
+                backgroundColor: "#333",
                 borderRadius: "6px",
                 color: "#fff",
-                padding: "8px 12px",
+                border: "none",
               }}
-              labelStyle={{
-                fontWeight: "bold",
-                color: "#fff",
-                marginBottom: "4px",
-              }}
-              formatter={(value: number) => [`₦${value.toLocaleString()}`, "Portfolio Value"]}
-              labelFormatter={(label) => `${label}`}
+              formatter={(value: number) => [`₦${value.toLocaleString()}k`, "Portfolio Value"]}
             />
-
             <Line
               type="monotone"
               dataKey="value"
-              stroke="url(#lineColor)"
-              strokeWidth={3}
+              stroke="#3E563B" // smooth green line
+              strokeWidth={2.5}
               dot={false}
-              activeDot={{
-                r: 6,
-                fill: "#7CB342",
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-              animationDuration={1000}
+              activeDot={{ r: 6, fill: "#3E563B", stroke: "#fff", strokeWidth: 2 }}
+              animationDuration={1200}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 text-sm text-gray-500 text-center">
-        {`Tracking from ${chartData[0]?.date || "N/A"} to ${
-          chartData[chartData.length - 1]?.date || "N/A"
-        }`}
+      <div className="text-center text-sm text-gray-500 mt-3">
+        {`Tracking from ${
+          chartData[0]?.month || "N/A"
+        } to ${chartData[chartData.length - 1]?.month || "N/A"}`}
       </div>
     </div>
   );
