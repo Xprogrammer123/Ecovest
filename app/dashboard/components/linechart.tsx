@@ -9,10 +9,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Investment } from "@/app/types/investment"; // ✅ Shared type import
+import { Investment } from "@/app/types/investment";
 
 interface ChartData {
-  month: string;
+  date: string;
   value: number;
 }
 
@@ -21,66 +21,53 @@ interface LineCharttProps {
 }
 
 const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
-  // Transform investment data into monthly performance data
+  // ✅ Transform investment data into daily performance
   const chartData = useMemo(() => {
     if (!investments.length) return [];
 
-    // Get the date range
-    const dates = investments.map((inv) => new Date(inv.createdAt));
-    const oldestDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    // Sort investments by creation date
+    const sorted = [...investments].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    const oldestDate = new Date(sorted[0].createdAt);
     const currentDate = new Date();
 
-    // Generate month array from oldest investment to now
-    const months: ChartData[] = [];
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
+    // Generate all days from first investment to now
+    const days: ChartData[] = [];
+    let currentDay = new Date(oldestDate);
 
-    let currentMonth = new Date(oldestDate);
-    currentMonth.setDate(1);
+    while (currentDay <= currentDate) {
+      const dailyValue = investments.reduce((total, investment) => {
+        const invDate = new Date(investment.createdAt);
+        if (invDate <= currentDay) {
+          // Calculate days since investment
+          const diffDays = Math.floor(
+            (currentDay.getTime() - invDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
 
-    while (currentMonth <= currentDate) {
-      const monthValue = investments.reduce((total, investment) => {
-        const investmentDate = new Date(investment.createdAt);
-
-        if (investmentDate <= currentMonth) {
-          const monthsSinceInvestment =
-            (currentMonth.getFullYear() - investmentDate.getFullYear()) * 12 +
-            (currentMonth.getMonth() - investmentDate.getMonth());
-
-          const monthlyRate = investment.expectedReturn / 100 / 12;
+          // Approximate daily growth (based on expected annual return)
+          const dailyRate = investment.expectedReturn / 100 / 365;
           const projectedValue =
-            investment.amount *
-            Math.pow(1 + monthlyRate, monthsSinceInvestment);
+            investment.amount * Math.pow(1 + dailyRate, diffDays);
 
           return total + projectedValue;
         }
         return total;
       }, 0);
 
-      months.push({
-        month: `${
-          monthNames[currentMonth.getMonth()]
-        } ${currentMonth.getFullYear()}`,
-        value: Math.round(monthValue / 1000), // Convert to thousands (k)
+      days.push({
+        date: currentDay.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        value: Math.round(dailyValue),
       });
 
-      // Move to next month
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      currentDay.setDate(currentDay.getDate() + 1);
     }
 
-    return months;
+    return days;
   }, [investments]);
 
   if (!investments.length) {
@@ -93,7 +80,7 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
 
   return (
     <div className="bg-white backdrop-blur border border-white/20 p-6 rounded-2xl shadow-sm">
-      <p className="text-2xl font-semibold mb-4">Portfolio Performance</p>
+      <p className="text-2xl font-semibold mb-4">Daily Portfolio Performance</p>
 
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -104,33 +91,25 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
             <defs>
               <linearGradient id="lineColor" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#597d4a" stopOpacity={1} />
-                <stop offset="100%" stopColor="#597d4a" stopOpacity={1} />
+                <stop offset="100%" stopColor="#597d4a" stopOpacity={0.6} />
               </linearGradient>
             </defs>
 
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#e0e0e0"
-            />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e0e0" />
 
             <XAxis
-              dataKey="month"
+              dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#2e2e2e", fontSize: 14 }}
-              padding={{ left: 20, right: 20 }}
-              interval={"preserveStartEnd"}
-              angle={-45}
-              textAnchor="end"
-              height={60}
+              tick={{ fill: "#2e2e2e", fontSize: 12 }}
+              interval="preserveStartEnd"
             />
 
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#2e2e2e", fontSize: 14 }}
-              tickFormatter={(value) => `₦${value}k`}
+              tick={{ fill: "#2e2e2e", fontSize: 12 }}
+              tickFormatter={(value) => `₦${value.toLocaleString()}`}
             />
 
             <Tooltip
@@ -145,10 +124,7 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
                 color: "#fff",
                 marginBottom: "4px",
               }}
-              formatter={(value: number) => [
-                `₦${value.toLocaleString()}k`,
-                "Portfolio Value",
-              ]}
+              formatter={(value: number) => [`₦${value.toLocaleString()}`, "Portfolio Value"]}
               labelFormatter={(label) => `${label}`}
             />
 
@@ -171,8 +147,8 @@ const LineChartt: React.FC<LineCharttProps> = ({ investments }) => {
       </div>
 
       <div className="mt-4 text-sm text-gray-500 text-center">
-        {`Showing performance from ${chartData[0]?.month || "N/A"} to ${
-          chartData[chartData.length - 1]?.month || "N/A"
+        {`Tracking from ${chartData[0]?.date || "N/A"} to ${
+          chartData[chartData.length - 1]?.date || "N/A"
         }`}
       </div>
     </div>
