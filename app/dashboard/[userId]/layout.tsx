@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
 
 
-          <AssistantModal />
+        
         </main>
       </div>
     </AssistantProvider>
