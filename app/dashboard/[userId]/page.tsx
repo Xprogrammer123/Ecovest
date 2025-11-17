@@ -339,7 +339,6 @@ const DashboardPage = () => {
           investments={data?.investments ?? []}
           demoBalance={data?.demoBalance}
           invested={data?.invested}
-          userCreatedAt={data?.createdAt}
         />
 
         <div className="bg-white p-5 rounded-2xl shadow-sm">
