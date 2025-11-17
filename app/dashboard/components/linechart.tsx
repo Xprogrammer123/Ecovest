@@ -100,8 +100,8 @@ const LineChartt: React.FC<LineCharttProps> = ({
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#333",
-                color: "#fff",
+                backgroundColor: "#fff",
+                color: "#38c55f",
                 borderRadius: "8px",
                 border: "none",
               }}
