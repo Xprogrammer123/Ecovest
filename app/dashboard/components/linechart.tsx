@@ -104,8 +104,12 @@ const LineChartt: React.FC<LineCharttProps> = ({
                 color: "#38c55f",
                 borderRadius: "8px",
                 border: "none",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // subtle shadow
               }}
-              formatter={(v: number) => [`₦${v.toLocaleString()}k`, "Portfolio"]}
+              formatter={(v: number) => [
+                `₦${v.toLocaleString()}k`,
+                "Portfolio",
+              ]}
             />
             <Line
               type="monotone"
